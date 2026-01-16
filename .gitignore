@@ -1,0 +1,16 @@
+# Node
+node_modules/
+.cache/
+
+# Build output
+build/
+dist/
+
+# Logs
+npm-debug.log
+yarn-error.log
+
+# Laravel
+/vendor
+.env
+/storage/*.log

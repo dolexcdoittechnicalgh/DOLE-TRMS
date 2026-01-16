@@ -3534,7 +3534,8 @@ export function ApprovingHistory({
     <Container
       sx={{
         overflowY: "hidden",
-        overflowX: { xs: "auto", sm: "hidden" }, // Allow horizontal scroll on mobile
+        // Allow horizontal scroll on mobile
+        overflowX: { xs: "auto", sm: "hidden" },
       }}
     >
       <Box sx={{ 

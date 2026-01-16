@@ -10,7 +10,7 @@ import {
   InputAdornment,
 } from "@mui/material"; // Import MUI components
 import loginBg from "../assets/login-bg.webp";
-import logo from "../assets/dole-logo.png";
+import logo from "../assets/TRMS.png";
 import { loginUser } from "../auth"; // Import the login function
 import { useAppContext } from "../contexts/ContextProvider"; // Import useAppContext hook
 import { toast } from "react-toastify"; // Import toast from react-toastify
@@ -18,7 +18,7 @@ import "react-toastify/dist/ReactToastify.css"; // Import toast styles
 import CircularProgress from "@mui/material/CircularProgress";
 
 import IconButton from "@mui/material/IconButton";
-import CloseIcon from "@mui/icons-material/Close";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 // State variables for username and password inputs
@@ -65,20 +65,26 @@ function Login() {
     >
       <Container
         className="login-form"
-        style={{ position: "relative" }} // make container the relative parent
+        style={{ position: "relative", overflow: "visible" }} // make container the relative parent
       >
         <IconButton
-          aria-label="close"
+          aria-label="back"
           onClick={() => navigate("../")}
-          style={{
+          sx={{
             position: "absolute",
-            top: 10,
-            right: 10,
-            color: "#fff",
-            zIndex: 10,
+            top: 16,
+            right: 16,
+            color: "#424242",
+            zIndex: 1000,
+            backgroundColor: "rgba(255, 255, 255, 0.9)",
+            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
+            "&:hover": {
+              backgroundColor: "rgba(255, 255, 255, 1)",
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)",
+            },
           }}
         >
-          <CloseIcon />
+          <ArrowBackIcon />
         </IconButton>
         <img src={logo} alt="Logo" className="login-logo" />
         <Typography variant="h5" className="login-title">
@@ -94,7 +100,7 @@ function Login() {
         <Box component="form" onSubmit={handleSubmit} noValidate>
           <TextField //username field
             fullWidth
-            margin="dense"
+            margin="normal"
             label="Username"
             variant="outlined"
             value={username}
@@ -102,18 +108,34 @@ function Login() {
             placeholder="Enter your username"
             required
             className="text-field"
-            InputLabelProps={{ required: false, style: { color: "#ffffff" } }}
-            InputProps={{ style: { color: "#ffffff" } }}
+            InputLabelProps={{ 
+              required: false, 
+              style: { color: "#424242", fontWeight: 500 } 
+            }}
+            InputProps={{ 
+              style: { color: "#212121" },
+            }}
             sx={{
               "& .MuiOutlinedInput-root": {
-                "& fieldset": { borderColor: "#ffffff" },
-                "&:hover fieldset": { borderColor: "#ffffff" },
+                backgroundColor: "#ffffff",
+                borderRadius: "12px",
+                "& fieldset": { 
+                  borderColor: "#e0e0e0",
+                  borderWidth: "2px",
+                },
+                "&:hover fieldset": { 
+                  borderColor: "#1976d2",
+                },
+                "&.Mui-focused fieldset": { 
+                  borderColor: "#1976d2",
+                  borderWidth: "2px",
+                },
               },
             }}
           />
           <TextField
             fullWidth
-            margin="dense"
+            margin="normal"
             label="Password"
             type={showPassword ? "text" : "password"}
             variant="outlined"
@@ -122,16 +144,24 @@ function Login() {
             placeholder="Enter your password"
             required
             className="text-field"
-            InputLabelProps={{ required: false, style: { color: "#ffffff" } }}
+            InputLabelProps={{ 
+              required: false, 
+              style: { color: "#424242", fontWeight: 500 } 
+            }}
             InputProps={{
-              style: { color: "#ffffff" },
+              style: { color: "#212121" },
               endAdornment: (
                 <InputAdornment position="end">
                   <IconButton
                     aria-label="toggle password visibility"
                     onClick={() => setShowPassword((prev) => !prev)}
                     edge="end"
-                    sx={{ color: "#ffffff" }}
+                    sx={{ 
+                      color: "#424242",
+                      "&:hover": {
+                        backgroundColor: "rgba(25, 118, 210, 0.08)",
+                      },
+                    }}
                   >
                     {showPassword ? <VisibilityOff /> : <Visibility />}
                   </IconButton>
@@ -140,8 +170,19 @@ function Login() {
             }}
             sx={{
               "& .MuiOutlinedInput-root": {
-                "& fieldset": { borderColor: "#ffffff" },
-                "&:hover fieldset": { borderColor: "#ffffff" },
+                backgroundColor: "#ffffff",
+                borderRadius: "12px",
+                "& fieldset": { 
+                  borderColor: "#e0e0e0",
+                  borderWidth: "2px",
+                },
+                "&:hover fieldset": { 
+                  borderColor: "#1976d2",
+                },
+                "&.Mui-focused fieldset": { 
+                  borderColor: "#1976d2",
+                  borderWidth: "2px",
+                },
               },
             }}
           />
@@ -153,22 +194,32 @@ function Login() {
               variant="contained"
               disabled={isLoggingIn}
               sx={{
-                marginTop: "30px",
-                backgroundColor: "#1E1E1E",
-                height: "40px",
-                fontSize: "20px",
-                fontWeight: "normal",
-                width: "150px",
-                textTransform: "uppercase",
+                marginTop: "32px",
+                background: "linear-gradient(135deg, #1976d2 0%, #1565c0 100%)",
+                height: "48px",
+                fontSize: "16px",
+                fontWeight: 600,
+                width: "180px",
+                textTransform: "none",
+                borderRadius: "12px",
+                boxShadow: "0 4px 15px rgba(25, 118, 210, 0.4)",
+                letterSpacing: "0.5px",
+                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                "&:hover": {
+                  transform: "translateY(-2px)",
+                  boxShadow: "0 6px 20px rgba(25, 118, 210, 0.5)",
+                  background: "linear-gradient(135deg, #1565c0 0%, #0d47a1 100%)",
+                },
                 "&:disabled": {
-                  backgroundColor: "#888", // dimmed when disabled
+                  background: "linear-gradient(135deg, #9e9e9e 0%, #757575 100%)",
+                  boxShadow: "none",
                 },
               }}
               startIcon={
                 isLoggingIn && <CircularProgress size={20} color="inherit" />
               }
             >
-              {isLoggingIn ? "" : "Login"}
+              {isLoggingIn ? "Signing in..." : "Sign In"}
             </Button>
           </Box>
         </Box>

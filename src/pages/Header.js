@@ -14,9 +14,10 @@ function Header() {
     <AppBar
       position="static"
       sx={{
-        backgroundColor: "#d9d9d9",
-        boxShadow: 0,
+        background: "linear-gradient(135deg, #ffffff 0%, #f5f7fa 100%)",
+        boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
         py: { xs: 1, sm: 2 },
+        borderBottom: "1px solid rgba(0, 0, 0, 0.08)",
       }}
     >
       <Toolbar

@@ -28,6 +28,7 @@ const OfficialBusinessForm = ({
   handleSubmit,
   setFormData,
   employeeData, // Receive employee data as prop
+  onSuccess, // Callback for successful submission
 }) => {
   const formatTo12HourTime = (timeString) => {
     if (!timeString) return "N/A";
@@ -49,6 +50,67 @@ const OfficialBusinessForm = ({
 
     const ob = formData.officialBusiness;
 
+    // Validation: Check all required fields
+    if (!ob.dateOfBusiness) {
+      Swal.fire({
+        title: "Missing Required Field",
+        text: "Please select a date of business.",
+        icon: "warning",
+        confirmButtonColor: "#1554D2",
+      });
+      return;
+    }
+
+    if (!ob.itineraryTo || ob.itineraryTo.trim() === "") {
+      Swal.fire({
+        title: "Missing Required Field",
+        text: "Please provide a destination (To field).",
+        icon: "warning",
+        confirmButtonColor: "#1554D2",
+      });
+      return;
+    }
+
+    if (!ob.departureDate) {
+      Swal.fire({
+        title: "Missing Required Field",
+        text: "Please provide a departure date and time.",
+        icon: "warning",
+        confirmButtonColor: "#1554D2",
+      });
+      return;
+    }
+
+    if (!ob.expectedReturn) {
+      Swal.fire({
+        title: "Missing Required Field",
+        text: "Please provide an expected return date and time.",
+        icon: "warning",
+        confirmButtonColor: "#1554D2",
+      });
+      return;
+    }
+
+    if (!ob.purpose || ob.purpose.trim() === "") {
+      Swal.fire({
+        title: "Missing Required Field",
+        text: "Please provide a purpose.",
+        icon: "warning",
+        confirmButtonColor: "#1554D2",
+      });
+      return;
+    }
+
+    if (!ob.employees || ob.employees.length === 0 || !ob.employees[0]?.name || !ob.employees[0]?.id) {
+      Swal.fire({
+        title: "Missing Required Field",
+        text: "Please select at least one employee.",
+        icon: "warning",
+        confirmButtonColor: "#1554D2",
+      });
+      return;
+    }
+
     const payload = {
       office: "DOLE-X",
       division: "CDO-FO",
@@ -65,15 +127,6 @@ const OfficialBusinessForm = ({
         signature: emp.signature,
       })),
     };
-
-    if (!payload.date_of_business || !payload.purpose) {
-      Swal.fire(
-        "Missing Fields",
-        "Please fill in Date of Business and Purpose.",
-        "warning"
-      );
-      return;
-    }
 
     const formattedHTML = `
     <div style="text-align: left;">
@@ -144,6 +197,11 @@ const OfficialBusinessForm = ({
           dateOfBusiness: "", // ✅ Add this line to fix the error
         },
       }));
+
+      // Call onSuccess callback if provided
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (error) {
       console.error("Error submitting official business:", error);
       Swal.fire(
@@ -478,10 +536,13 @@ const OfficialBusinessForm = ({
             name="departureDate"
             value={formData.officialBusiness.departureDate}
             onChange={handleTimeChange}
+            required
             inputProps={{
               min: minDateTime,
               max: maxDateTime,
             }}
+            InputLabelProps={{ shrink: true }}
+            label="Departure Date"
           />
         </Grid>
 
@@ -492,11 +553,14 @@ const OfficialBusinessForm = ({
             name="expectedReturn"
             value={formData.officialBusiness.expectedReturn}
             onChange={handleTimeChange}
+            required
             inputProps={{
               min: minDateTime,
               max: maxDateTime,
             }}
             disabled={!businessDate}
+            InputLabelProps={{ shrink: true }}
+            label="Expected Return"
           />
         </Grid>
       </Grid>
@@ -511,6 +575,7 @@ const OfficialBusinessForm = ({
         name="purpose"
         value={formData.officialBusiness.purpose}
         onChange={(e) => handleChange(e, "officialBusiness")}
+        required
       />
       {/* <Typography variant="h6" className="section-title" sx={{ mt: 2 }}>
         E-Signature

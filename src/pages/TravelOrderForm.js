@@ -334,6 +334,9 @@ const TravelOrderForm = ({
             name="travelFrom"
             value={formData.travelFrom}
             onChange={handleChange}
+            required
+            InputLabelProps={{ shrink: true }}
+            label="Travel From"
           />
         </Grid>
         <Grid item xs={12} sm={6}>
@@ -343,6 +346,9 @@ const TravelOrderForm = ({
             name="travelTo"
             value={formData.travelTo}
             onChange={handleChange}
+            required
+            InputLabelProps={{ shrink: true }}
+            label="Travel To"
           />
         </Grid>
       </Grid>
@@ -393,6 +399,7 @@ const TravelOrderForm = ({
         name="destination"
         value={formData.destination}
         onChange={handleChange}
+        required
       />
       <Typography variant="h6" className="section-title" sx={{ mt: 1 }}>
         Purpose
@@ -404,6 +411,7 @@ const TravelOrderForm = ({
         name="purpose"
         value={formData.purpose}
         onChange={handleChange}
+        required
       />
 
       <Typography variant="h6" className="section-title" sx={{ mt: 1 }}>

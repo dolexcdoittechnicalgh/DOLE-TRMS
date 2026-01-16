@@ -15,9 +15,11 @@ import SignatureCanvas from "react-signature-canvas";
 import Swal from "sweetalert2";
 import { storePassSlip } from "../api"; // adjust path as needed
 
-const PassSlipForm = ({ employeeData }) => {
+const PassSlipForm = ({ employeeData, onSuccess }) => {
+  const today = new Date().toISOString().split("T")[0];
   const [formData, setFormData] = useState({
     employee_id: "",
+    date: today,
     startDate: "",
     endDate: "",
     placeToVisit: "",
@@ -48,6 +50,57 @@ const PassSlipForm = ({ employeeData }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    // Validation: Check all required fields
+    if (!formData.employee_id) {
+      Swal.fire({
+        title: "Missing Required Field",
+        text: "Please select an employee.",
+        icon: "warning",
+        confirmButtonColor: "#1554D2",
+      });
+      return;
+    }
+
+    if (!formData.date) {
+      Swal.fire({
+        title: "Missing Required Field",
+        text: "Please select a date.",
+        icon: "warning",
+        confirmButtonColor: "#1554D2",
+      });
+      return;
+    }
+
+    if (!formData.startDate || !formData.endDate) {
+      Swal.fire({
+        title: "Missing Required Field",
+        text: "Please provide start and end times.",
+        icon: "warning",
+        confirmButtonColor: "#1554D2",
+      });
+      return;
+    }
+
+    if (!formData.placeToVisit || formData.placeToVisit.trim() === "") {
+      Swal.fire({
+        title: "Missing Required Field",
+        text: "Please provide a place to visit.",
+        icon: "warning",
+        confirmButtonColor: "#1554D2",
+      });
+      return;
+    }
+
+    if (!formData.reason || formData.reason.trim() === "") {
+      Swal.fire({
+        title: "Missing Required Field",
+        text: "Please provide a reason.",
+        icon: "warning",
+        confirmButtonColor: "#1554D2",
+      });
+      return;
+    }
+
     let signatureData = null;
     if (sigCanvasRef.current && !sigCanvasRef.current.isEmpty()) {
       signatureData = sigCanvasRef.current.toDataURL();
@@ -55,16 +108,6 @@ const PassSlipForm = ({ employeeData }) => {
 
     if (!signatureData) {
       signatureData = null;
-    }
-
-    if (!formData.employee_id) {
-      Swal.fire({
-        title: "Error!",
-        text: "Please select an employee first.",
-        icon: "error",
-        confirmButtonColor: "#D33",
-      });
-      return;
     }
 
     const formattedStartDate = formatTimeToDate(formData.startDate);
@@ -113,6 +156,7 @@ const PassSlipForm = ({ employeeData }) => {
               // Clear the form after successful submission
               setFormData({
                 employee_id: "",
+                date: today,
                 startDate: "",
                 endDate: "",
                 placeToVisit: "",
@@ -193,7 +237,7 @@ const PassSlipForm = ({ employeeData }) => {
               id="pass-slip-name"
               name="employee_id" // Use employee_id as the name here
               value={formData.employee_id} // Bind to employee_id, not name
-              onChange={(e) => handleChange(e, "passSlip", 0)}
+              onChange={handleChange}
               label="Name"
               sx={{ width: "100%" }}
             >

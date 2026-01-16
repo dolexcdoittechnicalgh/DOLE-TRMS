@@ -4,8 +4,12 @@ import "./Modal.css";
 
 const CalendarModal = ({ events = [], onClose }) => {
   const [search, setSearch] = useState("");
-  const [activeTab, setActiveTab] = useState("Approved");
+  const [activeTab, setActiveTab] = useState("All");
+  const [typeFilter, setTypeFilter] = useState("All"); // Filter by Type: All, TO, OB, PS
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [selectedDetail, setSelectedDetail] = useState(null);
+  const isMobile = windowWidth <= 768;
+  const isSmallMobile = windowWidth <= 480;
 
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
@@ -25,167 +29,164 @@ const CalendarModal = ({ events = [], onClose }) => {
         .includes(term.toLowerCase())
     );
   };
-  const sampleEvent = {
-    allDay: false,
-    end: new Date("Sat May 17 2025 08:00:00 GMT+0800"),
-    resource: {
-      employees: [
-        { first_name: "Jhonel", last_name: "Mira" },
-        { first_name: "Roy", last_name: "Bug-os" },
-      ],
-      record: {
-        approved_at: null,
-        created_at: "2025-05-17 02:48:03",
-        date_of_business: "2025-05-17",
-        departure_date: "2025-05-17",
-        division: "CDO-FO",
-        expected_return: "2025-05-17",
-        id: 2,
-        office: "DOLE-X",
-        purpose: "Tumapagon",
-        remarks: null,
-        status: "pending",
-        travel_from: "DOLE-X",
-        travel_to: "Lapasan",
-        updated_at: "2025-05-17 02:48:03",
-        travel_by_air: 0,
-        travel_by_land: 0,
-        travel_by_water: 0,
-        travel_start_date: "2025-05-17",
-        travel_end_date: "2025-05-17",
-      },
-    },
-    type: "OB",
-    start: new Date("Sat May 17 2025 08:00:00 GMT+0800"),
-    status: "pending",
-    title: "OB - Jhonel Mira, Roy Bug-os",
-  };
 
-  // Suppose events is an array of such event objects
-
-  // Prepare categories
-  const categories = {
-    "TRAVEL ORDER": [],
-    "OFFICIAL BUSINESS": [],
-    "PASS SLIP": [],
-  };
-
-  const typeToCategory = {
-    TO: "TRAVEL ORDER",
-    OB: "OFFICIAL BUSINESS",
-    PS: "PASS SLIP", // adjust if needed
-  };
-
-  // Group events by category and filter by activeTab & search
-  /*************  ✨ Windsurf Command 🌟  *************/
+  // Process all events into a flat list for table display (one row per event/form with all employees combined)
+  const tableRows = [];
+  
   events.forEach((evt) => {
     const eventType = evt.type || evt.resource?.type || "PS";
-    const category = typeToCategory[eventType] || "PASS SLIP";
-
-    // Ensure status matches the current tab
-    const status = evt.status?.toLowerCase();
+    const employees = evt.employees || evt.resource?.employees || [];
+    const record = evt.record || evt.resource?.record || {};
+    const status = evt.status?.toLowerCase() || "pending";
     const normalizedStatus = status === "pendingadmin" ? "pending" : status;
 
-    if (normalizedStatus === activeTab.toLowerCase()) {
-      const employees = evt.employees || evt.resource?.employees || [];
-      const filteredEmployees = filterEmployees(employees, search);
-      const employeeCount = filteredEmployees.length;
-
-      const record = evt.record || evt.resource?.record || {};
-      const isOB = eventType === "OB";
-      const isTO = eventType === "TO";
-      const isPS = eventType === "PS";
-
-      const title = `${eventType} - ${employeeCount} Employee${
-        employeeCount !== 1 ? "s" : ""
-      }`;
-
-      const employeeDetails = filteredEmployees.map((emp) => ({
-        name: `${emp.first_name} ${emp.last_name}`,
-        location: isOB
-          ? record.travel_to || "N/A"
-          : isPS
-          ? record.place_to_visit || "N/A"
-          : record.destination || "N/A",
-        purpose: record.purpose || record.reason || "N/A",
-        remarks: record.remarks || "N/A",
-        travelByAir: isTO ? record.travel_by_air === 1 : false,
-        travelByLand: isTO ? record.travel_by_land === 1 : false,
-        travelByWater: isTO ? record.travel_by_water === 1 : false,
-        travelStart: isPS
-          ? record.time_start
-            ? record.time_start.split(" ")[1]
-            : "N/A"
-          : record.travel_start_date || "N/A",
-        travelEnd: isPS
-          ? record.time_end
-            ? record.time_end.split(" ").slice(1).join(" ")
-            : "N/A"
-          : record.travel_end_date || "N/A",
-      }));
-
-      categories[category].push({
-        title,
-        employees: employeeDetails,
-        remarks: record.remarks || "N/A",
-      });
+    // Filter by status if not "All"
+    if (activeTab !== "All" && normalizedStatus !== activeTab.toLowerCase()) {
+      return;
     }
+
+    // Filter by type if not "All"
+    if (typeFilter !== "All" && eventType !== typeFilter) {
+      return;
+    }
+
+    const filteredEmployees = filterEmployees(employees, search);
+    
+    // Skip if no employees match the search filter
+    if (filteredEmployees.length === 0) {
+      return;
+    }
+
+    const isOB = eventType === "OB";
+    const isPS = eventType === "PS";
+
+    // Get start and end dates
+    let startDate, endDate;
+    if (eventType === "TO") {
+      startDate = record.travel_from ? new Date(record.travel_from) : null;
+      endDate = record.travel_to ? new Date(record.travel_to) : null;
+    } else if (eventType === "PS") {
+      startDate = record.time_start ? new Date(record.time_start) : null;
+      endDate = record.time_end ? new Date(record.time_end) : null;
+    } else {
+      startDate = record.departure_date ? new Date(record.departure_date) : null;
+      endDate = record.expected_return ? new Date(record.expected_return) : null;
+    }
+
+    // Format employee names: use comma separator, and show "+X more" if more than 2
+    let employeeNames;
+    if (filteredEmployees.length === 0) {
+      return; // Skip if no employees
+    } else if (filteredEmployees.length === 1) {
+      employeeNames = `${filteredEmployees[0].first_name} ${filteredEmployees[0].last_name}`;
+    } else if (filteredEmployees.length === 2) {
+      // Two employees: "Mark, Jayson"
+      employeeNames = filteredEmployees
+        .map((emp) => `${emp.first_name} ${emp.last_name}`)
+        .join(", ");
+    } else {
+      // More than 2 employees: "Mark, Jayson, and +X more"
+      const firstTwoNames = filteredEmployees
+        .slice(0, 2)
+        .map((emp) => `${emp.first_name} ${emp.last_name}`)
+        .join(", ");
+      const remainingCount = filteredEmployees.length - 2;
+      employeeNames = `${firstTwoNames}, and +${remainingCount} more`;
+    }
+
+    // Create one row per event/form with all employees combined
+    tableRows.push({
+      type: eventType,
+      employeeName: employeeNames,
+      employees: filteredEmployees, // Keep all employees for detail modal
+      destination: isOB
+        ? record.travel_to || "N/A"
+        : isPS
+        ? record.place_to_visit || "N/A"
+        : record.destination || "N/A",
+      purpose: record.purpose || record.reason || "N/A",
+      status: normalizedStatus,
+      startDate: startDate,
+      endDate: endDate,
+      record: record,
+      eventType: eventType,
+    });
   });
-  /*******  5ade93b9-7cef-4d8d-9c57-7930a0f395f0  *******/
 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div
         className="modal-box"
-        style={{ maxWidth: "100vw", width: "fit-content" }}
+        style={{ 
+          maxWidth: isSmallMobile ? "100vw" : isMobile ? "95vw" : "100vw", 
+          width: isSmallMobile ? "100%" : "fit-content",
+          padding: isSmallMobile ? "12px" : isMobile ? "20px" : "32px",
+        }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="modal-header" style={{ position: "relative" }}>
-          <h2 style={{ marginBottom: "10px" }}>Events Details</h2>
+        <div className="modal-header" style={{ position: "relative", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "flex-start" : "center", gap: isMobile ? "12px" : "5px" }}>
+          <h2 style={{ 
+            marginBottom: isMobile ? "8px" : "10px", 
+            color: "#212121",
+            fontSize: isSmallMobile ? "18px" : isMobile ? "20px" : "24px",
+            width: isMobile ? "100%" : "auto",
+          }}>Events Details</h2>
 
-          <div className="tabs">
-            {["Pending", "Approved", "Declined"].map((tab) => {
-              const isActive = activeTab === tab;
+          <select
+            value={activeTab}
+            onChange={(e) => setActiveTab(e.target.value)}
+            style={{
+              padding: isSmallMobile ? "8px 12px" : "10px 20px",
+              border: "1px solid #ccc",
+              borderRadius: "5px",
+              cursor: "pointer",
+              fontSize: isSmallMobile ? "12px" : "14px",
+              backgroundColor: "white",
+              color: "#212121",
+              minWidth: isSmallMobile ? "120px" : "150px",
+              outline: "none",
+              fontFamily: "Poppins, sans-serif",
+              width: isMobile ? "100%" : "auto",
+            }}
+          >
+            <option value="All">All</option>
+            <option value="Approved">Approved</option>
+            <option value="Pending">Pending</option>
+            <option value="Declined">Declined</option>
+          </select>
 
-              // Define the background color for active tabs
-              let backgroundColor = "#ddd"; // default for inactive tabs
-
-              if (isActive) {
-                if (tab === "Approved") backgroundColor = "#4caf50"; // green
-                else if (tab === "Pending")
-                  backgroundColor = "#ff9800"; // orange
-                else if (tab === "Declined") backgroundColor = "#f44336"; // red
-              }
-
-              return (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  style={{
-                    padding: "10px 20px",
-                    border: "none",
-                    backgroundColor: backgroundColor,
-                    color: isActive ? "white" : "black",
-                    marginRight: "10px",
-                    cursor: "pointer",
-                    borderRadius: "5px",
-                    transition: "background-color 0.3s ease",
-                  }}
-                >
-                  {tab}
-                </button>
-              );
-            })}
-          </div>
+          <select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+            style={{
+              padding: isSmallMobile ? "8px 12px" : "10px 20px",
+              border: "1px solid #ccc",
+              borderRadius: "5px",
+              cursor: "pointer",
+              fontSize: isSmallMobile ? "12px" : "14px",
+              backgroundColor: "white",
+              color: "#212121",
+              minWidth: isSmallMobile ? "100px" : "130px",
+              outline: "none",
+              fontFamily: "Poppins, sans-serif",
+              width: isMobile ? "100%" : "auto",
+            }}
+          >
+            <option value="All">All Types</option>
+            <option value="TO">Travel Orders</option>
+            <option value="OB">Official Business</option>
+            <option value="PS">Pass Slips</option>
+          </select>
 
           <div
             style={{
               display: "flex",
               alignItems: "center",
               position: "relative",
-              marginLeft: "auto",
-              top: windowWidth < 480 ? "10px" : "0px",
+              marginLeft: isMobile ? "0" : "auto",
+              marginTop: isMobile ? "0" : "0",
               maxWidth: "100%",
+              width: isMobile ? "100%" : "auto",
             }}
           >
             <input
@@ -198,9 +199,9 @@ const CalendarModal = ({ events = [], onClose }) => {
                 paddingRight: "10px",
                 border: "1px solid #ccc",
                 borderRadius: "20px",
-                height: "36px",
-                width: windowWidth < 480 ? "90vw" : "200px",
-                fontSize: "14px",
+                height: isSmallMobile ? "32px" : "36px",
+                width: isMobile ? "100%" : "200px",
+                fontSize: isSmallMobile ? "12px" : "14px",
                 boxSizing: "border-box",
               }}
             />
@@ -210,6 +211,7 @@ const CalendarModal = ({ events = [], onClose }) => {
                 left: "10px",
                 color: "gray",
                 pointerEvents: "none",
+                fontSize: isSmallMobile ? "12px" : "14px",
               }}
             />
           </div>
@@ -219,92 +221,403 @@ const CalendarModal = ({ events = [], onClose }) => {
             onClick={onClose}
             style={{
               position: "absolute",
-              top: "-8px",
-              right: "-8px",
-              fontSize: "24px",
+              top: isSmallMobile ? "8px" : "-8px",
+              right: isSmallMobile ? "8px" : "-8px",
+              fontSize: isSmallMobile ? "20px" : "24px",
               cursor: "pointer",
-              color: "#FFF",
+              color: "#212121",
               zIndex: 1000,
             }}
           />
         </div>
 
-        {/* Display events grouped by category */}
-        {Object.entries(categories).map(([category, records], idx) => (
-          <div
-            key={idx}
-            className="table-section"
-            style={{
-              marginTop: idx === 0 ? "30px" : "60px",
-              fontSize: "12px", // 👈 smaller base font
-              lineHeight: "1.4",
-            }}
-          >
-            <h3
-              className="table-title"
+        {/* Display all events in a proper table */}
+        <div
+          className="table-section"
+          style={{
+            marginTop: isMobile ? "20px" : "30px",
+            fontSize: isSmallMobile ? "10px" : isMobile ? "11px" : "12px",
+            lineHeight: "1.4",
+            overflowX: "auto",
+            WebkitOverflowScrolling: "touch",
+            width: "100%",
+          }}
+        >
+          {tableRows.length > 0 ? (
+            <table
               style={{
-                fontSize: "13px", // smaller heading
-                marginBottom: "8px",
+                width: "100%",
+                minWidth: isMobile ? "600px" : "100%",
+                borderCollapse: "collapse",
+                backgroundColor: "white",
+                borderRadius: "8px",
+                overflow: "hidden",
+                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
               }}
             >
-              {category}
-            </h3>
-
-            <div className="table-container">
-              {records.length > 0 ? (
-                records.map((record, index) => (
-                  <div
-                    key={index}
-                    className="table-row"
-                    style={{
-                      marginBottom: "2px",
-                      fontSize: "12px",
-                    }}
-                  >
-                    <strong style={{ fontSize: "12px" }}>{record.title}</strong>
-                    <div
-                      style={{
-                        color: "red",
-                      }}
-                    >
-                      {record.employees.length > 0 ? (
-                        record.employees.map((emp, i) => (
-                          <div
-                            key={i}
-                            style={{
-                              marginRight: "100px",
-                            }}
-                          >
-                            <span>
-                              <b>{emp.name}</b>
-                            </span>{" "}
-                            — <span>Destination: {emp.location}</span> —{" "}
-                            <span>Purpose: {emp.purpose}</span>
-                          </div>
-                        ))
-                      ) : (
-                        <span style={{ marginLeft: "10px", fontSize: "11px" }}>
-                          No employees found.
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p
+              <thead>
+                <tr
                   style={{
-                    textAlign: "center",
-                    padding: "8px",
-                    fontSize: "11px",
+                    backgroundColor: "#f0f0f0",
                   }}
                 >
-                  No records found.
-                </p>
-              )}
+                  <th
+                    style={{
+                      padding: isSmallMobile ? "8px 6px" : isMobile ? "10px 8px" : "12px",
+                      textAlign: "left",
+                      border: "1px solid #ccc",
+                      fontWeight: "bold",
+                      fontSize: isSmallMobile ? "10px" : isMobile ? "11px" : "14px",
+                      color: "#212121",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    Type
+                  </th>
+                  <th
+                    style={{
+                      padding: isSmallMobile ? "8px 6px" : isMobile ? "10px 8px" : "12px",
+                      textAlign: "left",
+                      border: "1px solid #ccc",
+                      fontWeight: "bold",
+                      fontSize: isSmallMobile ? "10px" : isMobile ? "11px" : "14px",
+                      color: "#212121",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    Employee Name
+                  </th>
+                  <th
+                    style={{
+                      padding: isSmallMobile ? "8px 6px" : isMobile ? "10px 8px" : "12px",
+                      textAlign: "left",
+                      border: "1px solid #ccc",
+                      fontWeight: "bold",
+                      fontSize: isSmallMobile ? "10px" : isMobile ? "11px" : "14px",
+                      color: "#212121",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    Destination
+                  </th>
+                  <th
+                    style={{
+                      padding: isSmallMobile ? "8px 6px" : isMobile ? "10px 8px" : "12px",
+                      textAlign: "left",
+                      border: "1px solid #ccc",
+                      fontWeight: "bold",
+                      fontSize: isSmallMobile ? "10px" : isMobile ? "11px" : "14px",
+                      color: "#212121",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    Purpose
+                  </th>
+                  <th
+                    style={{
+                      padding: isSmallMobile ? "8px 6px" : isMobile ? "10px 8px" : "12px",
+                      textAlign: "left",
+                      border: "1px solid #ccc",
+                      fontWeight: "bold",
+                      fontSize: isSmallMobile ? "10px" : isMobile ? "11px" : "14px",
+                      color: "#212121",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    Start Date
+                  </th>
+                  <th
+                    style={{
+                      padding: isSmallMobile ? "8px 6px" : isMobile ? "10px 8px" : "12px",
+                      textAlign: "left",
+                      border: "1px solid #ccc",
+                      fontWeight: "bold",
+                      fontSize: isSmallMobile ? "10px" : isMobile ? "11px" : "14px",
+                      color: "#212121",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    End Date
+                  </th>
+                  <th
+                    style={{
+                      padding: isSmallMobile ? "8px 6px" : isMobile ? "10px 8px" : "12px",
+                      textAlign: "left",
+                      border: "1px solid #ccc",
+                      fontWeight: "bold",
+                      fontSize: isSmallMobile ? "10px" : isMobile ? "11px" : "14px",
+                      color: "#212121",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    Status
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {tableRows.map((row, index) => (
+                  <tr
+                    key={index}
+                    onClick={() => setSelectedDetail(row)}
+                    style={{
+                      backgroundColor: index % 2 === 0 ? "white" : "#f9f9f9",
+                      cursor: "pointer",
+                      transition: "background-color 0.2s ease",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = "#e3f2fd";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = index % 2 === 0 ? "white" : "#f9f9f9";
+                    }}
+                  >
+                    <td
+                      style={{
+                        padding: isSmallMobile ? "6px 4px" : isMobile ? "8px 6px" : "10px 12px",
+                        border: "1px solid #ccc",
+                        fontSize: isSmallMobile ? "9px" : isMobile ? "10px" : "13px",
+                        color: "#212121",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {row.type}
+                    </td>
+                    <td
+                      style={{
+                        padding: isSmallMobile ? "6px 4px" : isMobile ? "8px 6px" : "10px 12px",
+                        border: "1px solid #ccc",
+                        fontSize: isSmallMobile ? "9px" : isMobile ? "10px" : "13px",
+                        color: "#212121",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {row.employeeName}
+                    </td>
+                    <td
+                      style={{
+                        padding: isSmallMobile ? "6px 4px" : isMobile ? "8px 6px" : "10px 12px",
+                        border: "1px solid #ccc",
+                        fontSize: isSmallMobile ? "9px" : isMobile ? "10px" : "13px",
+                        color: "#212121",
+                        maxWidth: isMobile ? "120px" : "none",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: isMobile ? "nowrap" : "normal",
+                      }}
+                    >
+                      {row.destination}
+                    </td>
+                    <td
+                      style={{
+                        padding: isSmallMobile ? "6px 4px" : isMobile ? "8px 6px" : "10px 12px",
+                        border: "1px solid #ccc",
+                        fontSize: isSmallMobile ? "9px" : isMobile ? "10px" : "13px",
+                        color: "#212121",
+                        maxWidth: isMobile ? "120px" : "none",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: isMobile ? "nowrap" : "normal",
+                      }}
+                    >
+                      {row.purpose}
+                    </td>
+                    <td
+                      style={{
+                        padding: isSmallMobile ? "6px 4px" : isMobile ? "8px 6px" : "10px 12px",
+                        border: "1px solid #ccc",
+                        fontSize: isSmallMobile ? "9px" : isMobile ? "10px" : "13px",
+                        color: "#212121",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {row.startDate
+                        ? row.startDate.toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: isMobile ? "short" : "short",
+                            day: "numeric",
+                          })
+                        : "N/A"}
+                    </td>
+                    <td
+                      style={{
+                        padding: isSmallMobile ? "6px 4px" : isMobile ? "8px 6px" : "10px 12px",
+                        border: "1px solid #ccc",
+                        fontSize: isSmallMobile ? "9px" : isMobile ? "10px" : "13px",
+                        color: "#212121",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {row.endDate
+                        ? row.endDate.toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: isMobile ? "short" : "short",
+                            day: "numeric",
+                          })
+                        : "N/A"}
+                    </td>
+                    <td
+                      style={{
+                        padding: isSmallMobile ? "6px 4px" : isMobile ? "8px 6px" : "10px 12px",
+                        border: "1px solid #ccc",
+                        fontSize: isSmallMobile ? "9px" : isMobile ? "10px" : "13px",
+                        textTransform: "capitalize",
+                        fontWeight: "600",
+                        textAlign: "center",
+                        color:
+                          row.status === "approved"
+                            ? "#4caf50"
+                            : row.status === "pending"
+                            ? "#ff9800"
+                            : row.status === "declined"
+                            ? "#f44336"
+                            : "#757575",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {row.status}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <div style={{ textAlign: "center", padding: "20px" }}>
+              <table
+                style={{
+                  width: "100%",
+                  minWidth: isMobile ? "600px" : "100%",
+                  borderCollapse: "collapse",
+                  backgroundColor: "white",
+                  borderRadius: "8px",
+                  overflow: "hidden",
+                  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+                }}
+              >
+                <thead>
+                  <tr style={{ backgroundColor: "#f0f0f0" }}>
+                    <th style={{ padding: isSmallMobile ? "8px 6px" : isMobile ? "10px 8px" : "12px", textAlign: "left", border: "1px solid #ccc", fontWeight: "bold", fontSize: isSmallMobile ? "10px" : isMobile ? "11px" : "14px", color: "#212121", whiteSpace: "nowrap" }}>Type</th>
+                    <th style={{ padding: isSmallMobile ? "8px 6px" : isMobile ? "10px 8px" : "12px", textAlign: "left", border: "1px solid #ccc", fontWeight: "bold", fontSize: isSmallMobile ? "10px" : isMobile ? "11px" : "14px", color: "#212121", whiteSpace: "nowrap" }}>Employee Name</th>
+                    <th style={{ padding: isSmallMobile ? "8px 6px" : isMobile ? "10px 8px" : "12px", textAlign: "left", border: "1px solid #ccc", fontWeight: "bold", fontSize: isSmallMobile ? "10px" : isMobile ? "11px" : "14px", color: "#212121", whiteSpace: "nowrap" }}>Destination</th>
+                    <th style={{ padding: isSmallMobile ? "8px 6px" : isMobile ? "10px 8px" : "12px", textAlign: "left", border: "1px solid #ccc", fontWeight: "bold", fontSize: isSmallMobile ? "10px" : isMobile ? "11px" : "14px", color: "#212121", whiteSpace: "nowrap" }}>Purpose</th>
+                    <th style={{ padding: isSmallMobile ? "8px 6px" : isMobile ? "10px 8px" : "12px", textAlign: "left", border: "1px solid #ccc", fontWeight: "bold", fontSize: isSmallMobile ? "10px" : isMobile ? "11px" : "14px", color: "#212121", whiteSpace: "nowrap" }}>Start Date</th>
+                    <th style={{ padding: isSmallMobile ? "8px 6px" : isMobile ? "10px 8px" : "12px", textAlign: "left", border: "1px solid #ccc", fontWeight: "bold", fontSize: isSmallMobile ? "10px" : isMobile ? "11px" : "14px", color: "#212121", whiteSpace: "nowrap" }}>End Date</th>
+                    <th style={{ padding: isSmallMobile ? "8px 6px" : isMobile ? "10px 8px" : "12px", textAlign: "left", border: "1px solid #ccc", fontWeight: "bold", fontSize: isSmallMobile ? "10px" : isMobile ? "11px" : "14px", color: "#212121", whiteSpace: "nowrap" }}>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td colSpan="7" style={{ padding: "20px", textAlign: "center", color: "#999", fontStyle: "italic", fontSize: isSmallMobile ? "11px" : isMobile ? "12px" : "14px" }}>
+                      No events scheduled for this date
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Detail Modal */}
+      {selectedDetail && (
+        <div
+          className="modal-overlay"
+          style={{ zIndex: 10000 }}
+          onClick={() => setSelectedDetail(null)}
+        >
+          <div
+            className="modal-box"
+            style={{
+              maxWidth: isSmallMobile ? "100vw" : isMobile ? "95vw" : "600px",
+              width: isSmallMobile ? "100%" : "90%",
+              padding: isSmallMobile ? "16px" : isMobile ? "20px" : "24px",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ 
+              display: "flex", 
+              justifyContent: "space-between", 
+              alignItems: "center", 
+              marginBottom: isMobile ? "16px" : "20px",
+              flexWrap: "wrap",
+              gap: "8px",
+            }}>
+              <h2 style={{ 
+                margin: 0, 
+                color: "#212121",
+                fontSize: isSmallMobile ? "18px" : isMobile ? "20px" : "24px",
+              }}>Request Details</h2>
+              <FaTimes
+                onClick={() => setSelectedDetail(null)}
+                style={{
+                  fontSize: isSmallMobile ? "18px" : "20px",
+                  cursor: "pointer",
+                  color: "#212121",
+                }}
+              />
+            </div>
+            <div style={{ 
+              display: "flex", 
+              flexDirection: "column", 
+              gap: isMobile ? "10px" : "12px",
+              fontSize: isSmallMobile ? "13px" : isMobile ? "14px" : "16px",
+            }}>
+              <div>
+                <strong>Type:</strong> {selectedDetail.type}
+              </div>
+              <div>
+                <strong>Employee Name:</strong> {selectedDetail.employeeName}
+              </div>
+              <div>
+                <strong>Destination:</strong> {selectedDetail.destination}
+              </div>
+              <div>
+                <strong>Purpose:</strong> {selectedDetail.purpose}
+              </div>
+              <div>
+                <strong>Start Date:</strong>{" "}
+                {selectedDetail.startDate
+                  ? selectedDetail.startDate.toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })
+                  : "N/A"}
+              </div>
+              <div>
+                <strong>End Date:</strong>{" "}
+                {selectedDetail.endDate
+                  ? selectedDetail.endDate.toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })
+                  : "N/A"}
+              </div>
+              <div>
+                <strong>Status:</strong>{" "}
+                <span
+                  style={{
+                    padding: "4px 8px",
+                    borderRadius: "4px",
+                    color: "#fff",
+                    fontWeight: "600",
+                    backgroundColor:
+                      selectedDetail.status === "approved"
+                        ? "#4caf50"
+                        : selectedDetail.status === "pending"
+                        ? "#ff9800"
+                        : selectedDetail.status === "declined"
+                        ? "#f44336"
+                        : "#757575",
+                  }}
+                >
+                  {selectedDetail.status}
+                </span>
+              </div>
             </div>
           </div>
-        ))}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

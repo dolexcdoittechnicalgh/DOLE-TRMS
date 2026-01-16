@@ -5,8 +5,12 @@ import {
   Box,
   IconButton,
   Paper,
+  Dialog,
+  DialogContent,
+  DialogTitle,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 import Header from "./Header";
 import TravelOrderForm from "./TravelOrderForm";
@@ -20,8 +24,9 @@ import "./TOOBForm.css"; // ✅ Make sure you have the CSS you added
 function TOOBForm() {
   const navigate = useNavigate();
 
-  const [step, setStep] = useState(0); // Stepper: 0 = select type, 1 = form
+  const [step, setStep] = useState(0); // Stepper: 0 = select type, 1 = form (kept for backward compatibility)
   const [formType, setFormType] = useState(""); // "travel", "ob", "pass"
+  const [modalOpen, setModalOpen] = useState(false); // Modal open/close state
 
   const [employeeData, setEmployeeData] = useState([]);
   const today = new Date().toISOString().split("T")[0];
@@ -252,6 +257,79 @@ function TOOBForm() {
 
   const handleCreateTravelOrder = async (e) => {
     e.preventDefault();
+    
+    // Validation: Check all required fields
+    if (!formData.requester?.name || !formData.requester?.id) {
+      Swal.fire({
+        title: "Missing Required Field",
+        text: "Please select a requester name.",
+        icon: "warning",
+        confirmButtonColor: "#1554D2",
+      });
+      return;
+    }
+
+    if (!formData.date) {
+      Swal.fire({
+        title: "Missing Required Field",
+        text: "Please select a date.",
+        icon: "warning",
+        confirmButtonColor: "#1554D2",
+      });
+      return;
+    }
+
+    if (!formData.travelFrom || !formData.travelTo) {
+      Swal.fire({
+        title: "Missing Required Field",
+        text: "Please provide travel start and end dates.",
+        icon: "warning",
+        confirmButtonColor: "#1554D2",
+      });
+      return;
+    }
+
+    if (!formData.destination || formData.destination.trim() === "") {
+      Swal.fire({
+        title: "Missing Required Field",
+        text: "Please provide a destination.",
+        icon: "warning",
+        confirmButtonColor: "#1554D2",
+      });
+      return;
+    }
+
+    if (!formData.purpose || formData.purpose.trim() === "") {
+      Swal.fire({
+        title: "Missing Required Field",
+        text: "Please provide a purpose.",
+        icon: "warning",
+        confirmButtonColor: "#1554D2",
+      });
+      return;
+    }
+
+    if (!formData.previousTravel) {
+      Swal.fire({
+        title: "Missing Required Field",
+        text: "Please indicate if there was a previous travel record.",
+        icon: "warning",
+        confirmButtonColor: "#1554D2",
+      });
+      return;
+    }
+
+    // Check if at least one travel method is selected
+    if (!formData.travelBy?.Land && !formData.travelBy?.Water && !formData.travelBy?.Air) {
+      Swal.fire({
+        title: "Missing Required Field",
+        text: "Please select at least one travel method (Land, Water, or Air).",
+        icon: "warning",
+        confirmButtonColor: "#1554D2",
+      });
+      return;
+    }
+
     const requester = formData.requester || {};
     const requesterId = Number(requester.id);
     const additionalEmployees = Array.isArray(formData.employees)
@@ -259,19 +337,19 @@ function TOOBForm() {
       : [];
 
     const requestData = {
-      employee_id: requesterId || null,
+      employee_id: requesterId,
       re: "REQUEST FOR AUTHORITY TO TRAVEL",
       date: formData.date,
-      destination: formData.destination,
+      destination: formData.destination.trim(),
       travel_from: formData.travelFrom,
       travel_to: formData.travelTo,
       travel_by_land: formData.travelBy?.Land ? 1 : 0,
       travel_by_water: formData.travelBy?.Water ? 1 : 0,
       travel_by_air: formData.travelBy?.Air ? 1 : 0,
-      purpose: formData.purpose,
+      purpose: formData.purpose.trim(),
       previous_travel: formData.previousTravel,
-      travel_start_date: formData.startDate || null,
-      travel_end_date: formData.endDate || null,
+      travel_start_date: formData.travelFrom,
+      travel_end_date: formData.travelTo,
       employee_ids: [requesterId, ...additionalEmployees.map((emp) => emp.id)],
     };
 
@@ -378,18 +456,39 @@ function TOOBForm() {
       <Header />
 
       <Paper
-        elevation={4}
+        elevation={0}
         sx={{
-          padding: 3,
+          padding: 4,
           margin: "20px auto",
           maxWidth: { xs: "95%", sm: "1200px" },
           width: "100%",
-          backgroundColor: "#fffff",
-          borderRadius: "12px",
+          background: "linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)",
+          borderRadius: "24px",
+          boxShadow: "0 20px 60px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05)",
+          border: "1px solid rgba(255, 255, 255, 0.8)",
         }}
       >
-        <Box display="flex" justifyContent="flex-end">
-          <IconButton onClick={() => navigate("/")}>
+        <Box display="flex" justifyContent="space-between" alignItems="center">
+          <IconButton 
+            onClick={() => navigate("/")}
+            sx={{
+              color: "#424242",
+              "&:hover": {
+                backgroundColor: "rgba(0, 0, 0, 0.04)",
+              },
+            }}
+          >
+            <ArrowBackIcon />
+          </IconButton>
+          <IconButton 
+            onClick={() => navigate("/")}
+            sx={{
+              color: "#424242",
+              "&:hover": {
+                backgroundColor: "rgba(0, 0, 0, 0.04)",
+              },
+            }}
+          >
             <CloseIcon />
           </IconButton>
         </Box>
@@ -404,7 +503,7 @@ function TOOBForm() {
                   className={`form-type-button ${formType === "travel" ? "active" : ""}`}
                   onClick={() => {
                     setFormType("travel");
-                    setStep(1);
+                    setModalOpen(true);
                   }}
                 >
                   Travel Order
@@ -413,7 +512,7 @@ function TOOBForm() {
                   className={`form-type-button ${formType === "ob" ? "active" : ""}`}
                   onClick={() => {
                     setFormType("ob");
-                    setStep(1);
+                    setModalOpen(true);
                   }}
                 >
                   Official Business
@@ -422,7 +521,7 @@ function TOOBForm() {
                   className={`form-type-button ${formType === "pass" ? "active" : ""}`}
                   onClick={() => {
                     setFormType("pass");
-                    setStep(1);
+                    setModalOpen(true);
                   }}
                 >
                   Pass Slip
@@ -433,19 +532,62 @@ function TOOBForm() {
           </Box>
         )}
 
-        {/* Step 2: Show selected form */}
-        {step === 1 && (
-          <Box mt={2}>
-            <button
-              className="back-button"
+        {/* Modal for selected form */}
+        <Dialog
+          open={modalOpen}
+          onClose={() => {
+            setModalOpen(false);
+            setFormType("");
+          }}
+          maxWidth="sm"
+          fullWidth={false}
+          PaperProps={{
+            sx: {
+              maxWidth: { xs: "85vw", sm: "600px", md: "650px" },
+              width: { xs: "85vw", sm: "600px", md: "650px" },
+              maxHeight: "90vh",
+              borderRadius: "16px",
+            },
+          }}
+        >
+          <DialogTitle
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              pb: 1,
+            }}
+          >
+            <Box sx={{ fontSize: { xs: "1.25rem", sm: "1.5rem" }, fontWeight: 600 }}>
+              {formType === "travel"
+                ? "Travel Order Form"
+                : formType === "ob"
+                ? "Official Business Form"
+                : "Pass Slip Form"}
+            </Box>
+            <IconButton
               onClick={() => {
-                setStep(0);
+                setModalOpen(false);
                 setFormType("");
               }}
+              sx={{
+                color: (theme) => theme.palette.grey[500],
+                "&:hover": {
+                  backgroundColor: (theme) => theme.palette.grey[100],
+                },
+              }}
             >
-              ← Back to Form Type
-            </button>
-
+              <CloseIcon />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent
+            dividers
+            sx={{
+              maxHeight: "calc(90vh - 120px)",
+              overflowY: "auto",
+              p: { xs: 1.5, sm: 2 },
+            }}
+          >
             {formType === "travel" && (
               <TravelOrderForm
                 formData={formData}
@@ -480,8 +622,8 @@ function TOOBForm() {
                 employeeData={employeeData}
               />
             )}
-          </Box>
-        )}
+          </DialogContent>
+        </Dialog>
       </Paper>
     </div>
   );

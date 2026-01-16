@@ -1,15 +1,26 @@
 .bordered-table {
-  border: 1px solid #ddd;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .bordered-table th,
 .bordered-table td {
-  border: 1px solid #ddd;
-  padding: 8px;
+  border: 1px solid #e0e0e0;
+  padding: 12px 16px;
 }
 
 .bordered-table th {
-  font-weight: bold;
+  font-weight: 600;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8eaf6 100%);
+  color: #424242;
+  letter-spacing: 0.3px;
+}
+
+.bordered-table tr:hover {
+  background-color: rgba(25, 118, 210, 0.04);
+  transition: background-color 0.2s ease;
 }
 
 .table-cell {
@@ -43,10 +54,19 @@
 }
 
 .logoutButton {
-  background-color: black;
+  background: linear-gradient(135deg, #424242 0%, #212121 100%);
   color: white;
-  border-radius: 5px;
-  padding: 8px 12px;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+  letter-spacing: 0.3px;
+}
+
+.logoutButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
 }
 
 .select {
@@ -160,4 +180,105 @@ input[type="file"] {
 
 .MuiTabPanel-root {
   color: black !important;
+  padding: 24px !important;
+}
+
+/* Reduce padding for Travel Requests subtabs */
+.MuiTabPanel-root[value="pending"],
+.MuiTabPanel-root[value="approved"],
+.MuiTabPanel-root[value="declined"] {
+  padding-top: 8px !important;
+  padding-bottom: 0 !important;
+}
+
+/* Reduce padding for Employee subtabs */
+.MuiTabPanel-root[value="organizational-chart"],
+.MuiTabPanel-root[value="manage-employee"] {
+  padding-top: 8px !important;
+  padding-bottom: 0 !important;
+}
+
+/* Enhanced tab styling */
+.MuiTab-root {
+  font-weight: 600 !important;
+  letter-spacing: 0.3px !important;
+  text-transform: none !important;
+  min-height: 48px !important;
+  transition: all 0.3s ease !important;
+}
+
+.MuiTab-root:hover {
+  background-color: rgba(25, 118, 210, 0.08) !important;
+}
+
+.Mui-selected {
+  color: #1976d2 !important;
+  font-weight: 700 !important;
+}
+
+.MuiTabs-indicator {
+  background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%) !important;
+  height: 3px !important;
+  border-radius: 3px 3px 0 0 !important;
+}
+
+/* Prevent table header row from being selected */
+.MuiTableHead .MuiTableRow,
+.table-header-row {
+  background-color: #f0f0f0 !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+}
+
+.MuiTableHead .MuiTableRow.Mui-selected,
+.MuiTableHead .MuiTableRow[aria-selected="true"],
+.MuiTableHead .MuiTableRow[aria-selected="false"],
+.MuiTableHead .MuiTableRow[aria-selected="true"].Mui-selected,
+.table-header-row.Mui-selected,
+.table-header-row[aria-selected="true"] {
+  background-color: #f0f0f0 !important;
+  color: inherit !important;
+}
+
+.MuiTableHead .MuiTableRow:hover,
+.MuiTableHead .MuiTableRow.Mui-selected:hover,
+.MuiTableHead .MuiTableRow[aria-selected="true"]:hover,
+.table-header-row:hover,
+.table-header-row.Mui-selected:hover {
+  background-color: #f0f0f0 !important;
+}
+
+.MuiTableHead .MuiTableCell,
+.MuiTableHead .MuiTableRow.Mui-selected .MuiTableCell,
+.MuiTableHead .MuiTableRow:hover .MuiTableCell,
+.MuiTableHead .MuiTableRow[aria-selected="true"] .MuiTableCell,
+.table-header-row .MuiTableCell,
+.table-header-row.Mui-selected .MuiTableCell {
+  background-color: #f0f0f0 !important;
+  color: inherit !important;
+}
+
+/* Ensure header row never appears selected - override any Material-UI selection styles */
+.MuiTableHead .MuiTableRow.Mui-selected::before,
+.MuiTableHead .MuiTableRow[aria-selected="true"]::before,
+.table-header-row.Mui-selected::before {
+  display: none !important;
+}
+
+/* Make header row cells non-selectable */
+.MuiTableHead .MuiTableCell,
+.table-header-row .MuiTableCell {
+  pointer-events: none !important;
+  cursor: default !important;
+}
+
+/* Re-enable pointer events only for the checkbox cell */
+.MuiTableHead .MuiTableRow .MuiTableCell[class*="checkbox"],
+.MuiTableHead .MuiTableRow .MuiTableCell[data-padding="checkbox"],
+.table-header-row .MuiTableCell[class*="checkbox"],
+.table-header-row .MuiTableCell[data-padding="checkbox"] {
+  pointer-events: auto !important;
+  cursor: pointer !important;
 }

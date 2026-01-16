@@ -10,6 +10,7 @@ import Login from "./pages/Login";
 import TOOBForm from "./pages/TOOBForm";
 import ApprovingHome from "./pages/ApprovingHome";
 import PassSlipInterface from "./pages/PassSlipInterface";
+import OrganizationalStructure from "./pages/OrganizationalStructure";
 
 import { EditEmployee, StatisticsEmployee, TOSIGN } from "./pages/Functions";
 import { OBESIGN } from "./pages/OBESIGN";
@@ -17,16 +18,20 @@ import AdminLayout from "./layouts/AdminLayout";
 import { ContextProvider, useAppContext } from "./contexts/ContextProvider"; // Import context
 import GuardLayout from "./layouts/GuardLayout";
 import Unauthorized from "./pages/Unauthorized"; // adjust path if needed
+import SessionManager from "./components/SessionManager"; // Import session manager
+
 function App() {
   return (
     <ContextProvider>
       <Router>
+        <SessionManager />
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<CalendarPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/to-form" element={<TOOBForm />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
+          <Route path="/organizational-structure" element={<OrganizationalStructure />} />
           <Route element={<GuardLayout />}>
             <Route path="/PassSlipInterface" element={<PassSlipInterface />} />
           </Route>

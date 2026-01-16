@@ -1,5 +1,5 @@
 import jsPDF from "jspdf";
-import logo from "../assets/dole-logo.png";
+import logo from "../assets/TRMS.png";
 
 // ✅ Helper Functions
 const formatDate = (dateString) => {

@@ -6,6 +6,8 @@ import Header from "./pages/Header";
 import { NotificationProvider } from "./pages/NotificationContext"; // Import the NotificationProvider
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import "sweetalert2/dist/sweetalert2.min.css";
+import "./styles/sweetalert2-custom.css"; // Custom SweetAlert2 styles
 
 const theme = createTheme();
 

@@ -1,0 +1,24 @@
+{
+  "files": {
+    "main.css": "/static/css/main.6fbe21ff.css",
+    "main.js": "/static/js/main.fc3420ee.js",
+    "static/js/977.74934777.chunk.js": "/static/js/977.74934777.chunk.js",
+    "static/js/787.f1504ead.chunk.js": "/static/js/787.f1504ead.chunk.js",
+    "static/media/bagong pilipinas logo.png": "/static/media/bagong pilipinas logo.930712bb51352ae3eed3.png",
+    "static/media/IT-DOLEFO logo.png": "/static/media/IT-DOLEFO logo.54e600e749913487364c.png",
+    "static/media/dole-logo.png": "/static/media/dole-logo.8614deb7160ecad0f65c.png",
+    "static/media/calendarbg.webp": "/static/media/calendarbg.cfc7e625de7d6103436f.webp",
+    "static/media/logo-dole.png": "/static/media/logo-dole.5796c39332af02e149c8.png",
+    "static/media/socotec logo.png": "/static/media/socotec logo.94ffa04a7222231e9c95.png",
+    "static/media/login-bg.webp": "/static/media/login-bg.56e83e8f7e5bd95fc38f.webp",
+    "index.html": "/index.html",
+    "main.6fbe21ff.css.map": "/static/css/main.6fbe21ff.css.map",
+    "main.fc3420ee.js.map": "/static/js/main.fc3420ee.js.map",
+    "977.74934777.chunk.js.map": "/static/js/977.74934777.chunk.js.map",
+    "787.f1504ead.chunk.js.map": "/static/js/787.f1504ead.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.6fbe21ff.css",
+    "static/js/main.fc3420ee.js"
+  ]
+}

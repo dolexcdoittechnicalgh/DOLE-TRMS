@@ -4,21 +4,43 @@ import axios from "axios";
 import { toast } from "react-toastify";
 
 // Dynamically set base URL depending on hostname (development, LAN, or production)
+// Priority: Environment variable > Auto-detect > Default production URL
 const hostname = window.location.hostname;
 
 const API_BASE_URL =
-  hostname === "localhost" ||
+  process.env.REACT_APP_API_URL || // Use environment variable if set (for Vercel, etc.)
+  (hostname === "localhost" ||
   hostname.startsWith("192.168.") ||
   hostname.startsWith("10.")
     ? `http://${hostname}:8000/api` // Dev or LAN
-    : `${window.location.origin}/api`; // Production
+    : `https://api.dolexcdo.online/api`); // Production (fallback)
 
 const AppContext = createContext();
 export const ContextProvider = ({ children }) => {
+  // Initialize dark mode from localStorage or default to false
+  const [darkMode, setDarkMode] = useState(() => {
+    const saved = localStorage.getItem("darkMode");
+    return saved ? JSON.parse(saved) : false;
+  });
   const [token, setToken] = useState(Cookies.get("ACCESS_TOKEN") || null);
   const [userRole, setUserRole] = useState(Cookies.get("USER_ROLE") || null);
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true); // Loading state for async tasks
+
+  // Apply dark mode class to document element
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add("dark-mode");
+    } else {
+      document.documentElement.classList.remove("dark-mode");
+    }
+    // Save to localStorage
+    localStorage.setItem("darkMode", JSON.stringify(darkMode));
+  }, [darkMode]);
+
+  const toggleDarkMode = () => {
+    setDarkMode((prev) => !prev);
+  };
 
   useEffect(() => {
     // Check if the token exists and is valid
@@ -95,6 +117,8 @@ export const ContextProvider = ({ children }) => {
         user: user || null,
         token: token || null,
         userRole: userRole || null,
+        darkMode,
+        toggleDarkMode,
         login: (userData, userToken) => {
           if (!userData || !userToken) {
             console.error("ContextProvider: login() missing user or token");

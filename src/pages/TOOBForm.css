@@ -1,23 +1,44 @@
 /* src/TOForm.css */
 /* FONT:POPPINS */
-@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
 
 * {
   font-family: "Poppins", sans-serif !important;
   margin: 0;
   padding: 0;
-  box-sizing: border-box; /* no unexpected spacing */
+  box-sizing: border-box;
 }
 
 /* Make the form container scrollable */
 .to-form-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  z-index: 1;
+  background-image: url(../assets/bgimage.webp);
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+  min-height: 100vh;
+}
+
+.to-form-container::before {
   content: "";
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  overflow-y: auto; /* Enables vertical scrolling */
+  background: linear-gradient(135deg, rgba(25, 118, 210, 0.3) 0%, rgba(244, 67, 54, 0.3) 100%);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.to-form-container > * {
+  position: relative;
   z-index: 1;
 }
 
@@ -27,62 +48,87 @@ body {
   height: 100%;
   margin: 0;
   padding: 0;
-  overflow-y: scroll; /* Allows scrolling when needed */
-  background-color: #d9d9d9;
+  overflow-y: scroll;
 }
 
 /* Center the form title */
 .form-title {
   text-align: center;
   margin-bottom: 30px;
-  font-weight: bold;
+  font-weight: 600;
+  font-size: 28px;
+  color: #1976d2;
+  letter-spacing: 0.5px;
 }
 
 /* Section title styling */
 .section-title {
-  margin-top: 15px !important;
-  margin-bottom: 10px;
-  font-weight: bold;
-  font-size: 15px !important;
-  font-weight: bold !important;
+  margin-top: 24px !important;
+  margin-bottom: 12px !important;
+  font-weight: 600 !important;
+  font-size: 16px !important;
+  color: #212121;
+  letter-spacing: 0.2px;
+  font-family: "Poppins", sans-serif !important;
 }
 
-/* Submit button styling */
+/* Enhanced submit button styling */
 .submit-button {
-  margin-top: 30px;
+  margin-top: 24px;
   width: 30%;
-  padding: 10px;
-  font-size: 16px;
+  padding: 10px 24px;
+  font-size: 15px;
+  font-weight: 500;
+  background: #1976d2;
+  color: white;
+  border: 1px solid #1976d2;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  letter-spacing: 0;
+  font-family: "Poppins", sans-serif;
+  text-transform: none;
 }
 
-/* Tab Navigation Styling */
+.submit-button:hover {
+  background: #1565c0;
+  border-color: #1565c0;
+}
+
+/* Enhanced Tab Navigation Styling */
 .tab-container {
   display: flex;
   justify-content: center;
-  gap: 5px;
-  margin-top: 10px;
-  margin-bottom: 20px;
+  gap: 10px;
+  margin-top: 15px;
+  margin-bottom: 25px;
 }
 
 .tab-container button {
-  background: none;
-  border: 1px solid primary;
-  padding: 10px 20px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid #e0e0e0;
+  padding: 12px 24px;
   cursor: pointer;
   font-size: 15px;
-  font-weight: bold;
-  transition: background 0.3s, color 0.3s;
-  color: #1e1e1e; /* Text is always black */
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  color: #424242;
+  border-radius: 10px;
+  letter-spacing: 0.3px;
 }
 
 .tab-container button:hover {
-  background-color: #1554d2;
-  color: white; /* Turns white on hover */
+  background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+  color: white;
+  border-color: #1976d2;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
 }
 
 .tab-container .active-tab {
-  background-color: #1554d2;
-  color: #ffff; /* White text for active tab */
+  background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+  color: white;
+  border-color: #1976d2;
+  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
 }
 
 /* Ensure form elements have spacing */
@@ -92,6 +138,284 @@ form {
   gap: 10px;
   border-radius: 20px;
   /* padding-bottom: 0px; Prevents the last element from being cut off */
+}
+
+/* Elegant TextField Styling */
+form .MuiTextField-root,
+form .MuiAutocomplete-root .MuiTextField-root,
+form .MuiFormControl-root .MuiTextField-root {
+  margin-bottom: 8px;
+}
+
+form .MuiTextField-root .MuiOutlinedInput-root,
+form .MuiAutocomplete-root .MuiOutlinedInput-root,
+form .MuiFormControl-root .MuiOutlinedInput-root {
+  background-color: #ffffff;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: "Poppins", sans-serif;
+  transition: all 0.2s ease;
+}
+
+form .MuiTextField-root .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline,
+form .MuiAutocomplete-root .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline,
+form .MuiFormControl-root .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline {
+  border-color: #e0e0e0;
+  border-width: 1px;
+}
+
+form .MuiTextField-root .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline,
+form .MuiAutocomplete-root .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline,
+form .MuiFormControl-root .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: #bdbdbd;
+}
+
+form .MuiTextField-root .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline,
+form .MuiAutocomplete-root .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline,
+form .MuiFormControl-root .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: #1976d2;
+  border-width: 2px;
+}
+
+form .MuiTextField-root .MuiInputLabel-root,
+form .MuiAutocomplete-root .MuiInputLabel-root,
+form .MuiFormControl-root .MuiInputLabel-root {
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #616161;
+}
+
+form .MuiTextField-root .MuiInputLabel-root.Mui-focused,
+form .MuiAutocomplete-root .MuiInputLabel-root.Mui-focused,
+form .MuiFormControl-root .MuiInputLabel-root.Mui-focused {
+  color: #1976d2;
+}
+
+form .MuiTextField-root .MuiInputBase-input,
+form .MuiAutocomplete-root .MuiInputBase-input,
+form .MuiFormControl-root .MuiInputBase-input {
+  color: #212121;
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+}
+
+form .MuiTextField-root .MuiInputBase-input::placeholder,
+form .MuiAutocomplete-root .MuiInputBase-input::placeholder {
+  color: #9e9e9e;
+  opacity: 1;
+}
+
+/* Disabled TextField */
+form .MuiTextField-root .MuiOutlinedInput-root.Mui-disabled,
+form .MuiFormControl-root .MuiOutlinedInput-root.Mui-disabled {
+  background-color: #f5f5f5;
+}
+
+form .MuiTextField-root .MuiOutlinedInput-root.Mui-disabled .MuiOutlinedInput-notchedOutline {
+  border-color: #e0e0e0;
+}
+
+/* Select (Dropdown) Styling */
+form .MuiSelect-root,
+form .MuiFormControl-root .MuiSelect-root {
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+  color: #212121;
+  border-radius: 8px;
+}
+
+form .MuiSelect-root .MuiOutlinedInput-notchedOutline {
+  border-color: #e0e0e0;
+  border-width: 1px;
+}
+
+form .MuiSelect-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: #bdbdbd;
+}
+
+form .MuiSelect-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: #1976d2;
+  border-width: 2px;
+}
+
+form .MuiFormControl-root .MuiInputLabel-root {
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #616161;
+}
+
+/* Checkbox Styling */
+form .MuiCheckbox-root {
+  color: #757575;
+  padding: 8px;
+  transition: all 0.2s ease;
+}
+
+form .MuiCheckbox-root:hover {
+  background-color: rgba(25, 118, 210, 0.08);
+  border-radius: 4px;
+}
+
+form .MuiCheckbox-root.Mui-checked {
+  color: #1976d2;
+}
+
+form .MuiFormControlLabel-root {
+  margin-right: 16px;
+  margin-left: 0;
+}
+
+form .MuiFormControlLabel-label {
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: #424242;
+}
+
+/* Radio Button Styling */
+form .MuiRadio-root {
+  color: #757575;
+  padding: 8px;
+  transition: all 0.2s ease;
+}
+
+form .MuiRadio-root:hover {
+  background-color: rgba(25, 118, 210, 0.08);
+  border-radius: 50%;
+}
+
+form .MuiRadio-root.Mui-checked {
+  color: #1976d2;
+}
+
+/* Button Styling - All Buttons */
+form .MuiButton-root,
+form button.MuiButton-root {
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  text-transform: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  transition: all 0.2s ease;
+  letter-spacing: 0;
+}
+
+/* Contained Buttons */
+form .MuiButton-contained {
+  background-color: #1976d2;
+  color: white;
+  border: 1px solid #1976d2;
+  box-shadow: none;
+}
+
+form .MuiButton-contained:hover {
+  background-color: #1565c0;
+  border-color: #1565c0;
+  box-shadow: none;
+}
+
+/* Error Buttons (Remove buttons) */
+form .MuiButton-contained.MuiButton-colorError {
+  background-color: #d32f2f;
+  border-color: #d32f2f;
+}
+
+form .MuiButton-contained.MuiButton-colorError:hover {
+  background-color: #c62828;
+  border-color: #c62828;
+}
+
+/* Outlined Buttons */
+form .MuiButton-outlined {
+  border-width: 1px;
+  border-color: #1976d2;
+  color: #1976d2;
+}
+
+form .MuiButton-outlined:hover {
+  background-color: rgba(25, 118, 210, 0.08);
+  border-color: #1565c0;
+  border-width: 1px;
+}
+
+/* All contained buttons get the standard styling from .MuiButton-contained above */
+
+/* Grid Spacing */
+form .MuiGrid-container {
+  margin-top: 0;
+}
+
+form .MuiGrid-item {
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+/* Box Spacing */
+form .MuiBox-root {
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+/* FormGroup Styling */
+form .MuiFormGroup-root {
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+/* Typography in forms */
+form .MuiTypography-root {
+  font-family: "Poppins", sans-serif;
+}
+
+/* Paper components in forms */
+form .MuiPaper-root {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Autocomplete dropdown */
+.MuiAutocomplete-paper {
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+  margin-top: 4px !important;
+}
+
+.MuiAutocomplete-option {
+  font-family: "Poppins", sans-serif !important;
+  font-size: 14px !important;
+  padding: 10px 16px !important;
+  transition: background-color 0.2s ease !important;
+}
+
+.MuiAutocomplete-option:hover {
+  background-color: rgba(25, 118, 210, 0.08) !important;
+}
+
+.MuiAutocomplete-option[aria-selected="true"] {
+  background-color: rgba(25, 118, 210, 0.12) !important;
+}
+
+/* Select Menu Items */
+.MuiMenuItem-root {
+  font-family: "Poppins", sans-serif !important;
+  font-size: 14px !important;
+  padding: 10px 16px !important;
+  transition: background-color 0.2s ease !important;
+}
+
+.MuiMenuItem-root:hover {
+  background-color: rgba(25, 118, 210, 0.08) !important;
+}
+
+.MuiMenuItem-root.Mui-selected {
+  background-color: rgba(25, 118, 210, 0.12) !important;
+}
+
+.MuiMenuItem-root.Mui-selected:hover {
+  background-color: rgba(25, 118, 210, 0.16) !important;
 }
 
 .my-swal-button {
@@ -125,28 +449,52 @@ form {
 
 
 .form-type-button {
-  background-color: #eeeeee;
-  border: 1px solid #ccc;
+  width: 250px;
+  height: 70px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8eaf6 100%);
+  border: 2px solid #e0e0e0;
   padding: 10px 20px;
-  font-weight: bold;
-  border-radius: 8px;
+  font-weight: 600;
+  border-radius: 16px;
   cursor: pointer;
-  transition: all 0.2s ease-in-out;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 16px;
+  color: #424242;
+  letter-spacing: 0.3px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-.form-type-button:hover,
-.form-type-button.active {
-  background-color: #1554d2;
+.form-type-button:hover {
+  background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
   color: white;
-  border-color: #1554d2;
+  border-color: #1976d2;
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(25, 118, 210, 0.4);
+}
+
+.form-type-button.active {
+  background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+  color: white;
+  border-color: #1976d2;
+  box-shadow: 0 8px 20px rgba(25, 118, 210, 0.4);
+  transform: translateY(-2px);
 }
 
 .back-button {
   background-color: transparent;
   border: none;
-  color: #1554d2;
+  color: #1976d2;
   cursor: pointer;
-  font-weight: 500;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  letter-spacing: 0.3px;
+}
+
+.back-button:hover {
+  background-color: rgba(25, 118, 210, 0.1);
+  color: #1565c0;
 }
 
 h1 {
@@ -154,38 +502,17 @@ h1 {
   align-items: center;
   justify-content: center;
   margin-bottom: 50px;
+  font-weight: 600;
+  color: #1976d2;
+  font-size: 32px;
+  letter-spacing: 0.5px;
 }
-
 
 #select-button {
   display: flex;
   flex-wrap: wrap;
   flex-direction: row;
-  gap: 16px;
+  gap: 20px;
   justify-content: center;
-  margin-top: 20px;
-}
-
-.form-type-button {
-  width: 250px;
-  height: 60px;
-  background-color: #e0e0e0;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.form-type-button.active {
-  background-color: #1554D2;
-  color: white;
-}
-
-.form-type-button:hover {
-  background-color: #00569c;
-}
-
-button {
-
+  margin-top: 30px;
 }

@@ -36,6 +36,8 @@ import {
   VisibilityOffOutlined,
   VisibilityOutlined,
   AccessTimeOutlined,
+  Logout,
+  AccountCircle,
 } from "@mui/icons-material";
 import EditIcon from "@mui/icons-material/Edit";
 import SaveIcon from "@mui/icons-material/Save";
@@ -59,8 +61,8 @@ import {
   CircularProgress,
   Divider,
   DialogActions,
-  DetailLabel,
   TablePagination,
+  Checkbox,
 } from "@mui/material";
 import Container from "@mui/material/Container";
 import AppBar from "@mui/material/AppBar";
@@ -87,6 +89,7 @@ import { GeneratePassSlipPDF } from "./PassSlippdf";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 import logo from "../assets/logo-dole.png";
+import trmsLogo from "../assets/TRMS2.png";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import Chip from "@mui/material/Chip";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
@@ -125,72 +128,123 @@ import {
 } from "../api"; // adjust path as needed
 
 // Header Component
-export function Header({ getToDetails }) {
+export function Header({ getToDetails, handleLogout }) {
   const { unreadNotifications } = useNotifications(); // ✅ Use context
+  const { user } = useAppContext(); // Get user from context
+  const [userMenuAnchor, setUserMenuAnchor] = useState(null);
 
   const headerLogo = {
-    image: "https://dolexportal.com/img/dole.png",
-    name: "DOLE",
+    image: trmsLogo,
+    name: "TRMS",
+  };
+
+  // Get user name - try multiple possible properties
+  const getUserName = () => {
+    if (!user) return "User";
+    // Try different possible property names
+    return user.name || user.username || user.first_name || user.full_name || "User";
+  };
+
+  const handleUserMenuOpen = (event) => {
+    setUserMenuAnchor(event.currentTarget);
+  };
+
+  const handleUserMenuClose = () => {
+    setUserMenuAnchor(null);
+  };
+
+  const handleLogoutClick = () => {
+    handleUserMenuClose();
+    if (handleLogout) {
+      handleLogout();
+    }
   };
 
   return (
     <AppBar
       position="static"
-      sx={{ backgroundColor: "white", boxShadow: 0, paddingY: 1 }}
+      sx={{ 
+        backgroundColor: "white", 
+        boxShadow: 0, 
+        padding: "4px 8px",
+        minHeight: "60px !important",
+      }}
     >
       <Toolbar
         sx={{
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
+          minHeight: "52px !important",
+          padding: "0 8px !important",
         }}
       >
         {/* Logo & Text */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2, mt: 2 }}>
-          <img
-            src={headerLogo.image}
-            alt={headerLogo.name}
-            style={{ width: 75, height: 70 }}
-          />
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+          <Box sx={{ padding: "5px" }}>
+            <img
+              src={headerLogo.image}
+              alt={headerLogo.name}
+              style={{ width: 50, height: 50 }}
+            />
+          </Box>
 
           {/* Header Text - Hidden on Mobile */}
           <Box
             sx={{
               display: { xs: "none", sm: "flex" },
               flexDirection: "column",
-              mt: 2,
             }}
           >
             <Typography
-              variant="body1"
-              sx={{ color: "black", fontWeight: 400, fontSize: "13px" }}
+              variant="body2"
+              sx={{ 
+                color: "black", 
+                fontWeight: 500, 
+                fontSize: "10px !important",
+                lineHeight: 1.2,
+              }}
             >
               Republic of the Philippines
             </Typography>
             <Typography
-              variant="body1"
-              sx={{ color: "black", fontWeight: 600, fontSize: "13px" }}
+              variant="body2"
+              sx={{ 
+                color: "black", 
+                fontWeight: "bold", 
+                fontSize: "11px !important",
+                lineHeight: 1.2,
+              }}
             >
               DEPARTMENT OF LABOR AND EMPLOYMENT
             </Typography>
             <Typography
-              variant="body1"
-              sx={{ color: "black", fontWeight: 500, fontSize: "13px" }}
+              variant="body2"
+              sx={{ 
+                color: "black", 
+                fontWeight: 500, 
+                fontSize: "10px !important",
+                lineHeight: 1.2,
+              }}
             >
               Regional Office No. X
             </Typography>
             <Typography
-              variant="body1"
-              sx={{ color: "black", fontWeight: 600, fontSize: "13px" }}
+              variant="body2"
+              sx={{ 
+                color: "black", 
+                fontWeight: "normal", 
+                fontSize: "10px !important",
+                lineHeight: 1.2,
+              }}
             >
               Cagayan De Oro - Field Office
             </Typography>
           </Box>
         </Box>
 
-        {/* Time & Weather Widgets */}
-
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+        {/* Right Side: Time, Weather Widgets & Logout Button */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 1, sm: 2 } }}>
           <NotificationBell
             unreadNotifications={unreadNotifications}
             onClick={() => {}} // Optional: leave empty or remove if not needed
@@ -200,6 +254,71 @@ export function Header({ getToDetails }) {
 
           <Time />
           <WeatherWidget />
+          
+          {/* User Icon and Greeting */}
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Typography
+              sx={{
+                display: { xs: "none", sm: "block" },
+                fontSize: { sm: "12px", md: "14px" },
+                color: "#333",
+                fontWeight: 500,
+              }}
+            >
+              Hello! Sir, {getUserName()}
+            </Typography>
+            <IconButton
+              onClick={handleUserMenuOpen}
+              sx={{
+                color: "#1976d2",
+                "&:hover": {
+                  backgroundColor: "rgba(25, 118, 210, 0.08)",
+                },
+                padding: { xs: "4px", sm: "8px" },
+              }}
+            >
+              <AccountCircle sx={{ fontSize: { xs: 28, sm: 32 } }} />
+            </IconButton>
+          </Box>
+
+          {/* User Dropdown Menu */}
+          <Menu
+            anchorEl={userMenuAnchor}
+            open={Boolean(userMenuAnchor)}
+            onClose={handleUserMenuClose}
+            anchorOrigin={{
+              vertical: "bottom",
+              horizontal: "right",
+            }}
+            transformOrigin={{
+              vertical: "top",
+              horizontal: "right",
+            }}
+            PaperProps={{
+              sx: {
+                mt: 1,
+                minWidth: 180,
+                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                borderRadius: "8px",
+              },
+            }}
+          >
+            {handleLogout && (
+              <MenuItem
+                onClick={handleLogoutClick}
+                sx={{
+                  color: "#d32f2f",
+                  fontWeight: 500,
+                  "&:hover": {
+                    backgroundColor: "rgba(211, 47, 47, 0.08)",
+                  },
+                }}
+              >
+                <Logout sx={{ mr: 1, fontSize: 20 }} />
+                Logout
+              </MenuItem>
+            )}
+          </Menu>
         </Box>
       </Toolbar>
     </AppBar>
@@ -437,6 +556,384 @@ export function Time() {
   );
 }
 
+// Dashboard Component - Display counts for Pending, Approved, and Declined
+export function Dashboard({ 
+  pendingCount, 
+  approvedCount, 
+  declinedCount,
+  toCount,
+  obCount,
+  passSlipCount,
+  employeeCountsOfficialBusiness,
+  employeeCountsTravelOrder,
+  employeeCountsPassSlip,
+  onNavigateToSubtab,
+  allData, // Pass all data to display in modal
+}) {
+  const [openModal, setOpenModal] = useState(false);
+  const [modalType, setModalType] = useState(null); // 'TO', 'OB', or 'PS'
+  const [modalData, setModalData] = useState([]);
+
+  const handleCardClick = (type) => {
+    if (!allData || !Array.isArray(allData)) {
+      console.warn("No data available for modal");
+      return;
+    }
+    
+    // Filter data by type
+    const filtered = allData.filter((item) => item.type === type);
+    setModalData(filtered);
+    setModalType(type);
+    setOpenModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setOpenModal(false);
+    setModalType(null);
+    setModalData([]);
+  };
+
+  const getStatus = (item) => {
+    if (item.type === "TO" && item.travel_order) {
+      return item.travel_order.status || "N/A";
+    } else if (item.type === "OB" && item.official_business) {
+      return item.official_business.status || "N/A";
+    } else if (item.type === "PS" && item.pass_slip) {
+      return item.pass_slip.status || "N/A";
+    }
+    return item.status || "N/A";
+  };
+
+  const getStatusColor = (status) => {
+    const normalizedStatus = (status || "").toLowerCase();
+    if (normalizedStatus === "approved") return "#4caf50";
+    if (normalizedStatus === "declined") return "#f44336";
+    if (normalizedStatus === "pending" || normalizedStatus === "pendingadmin") return "#ff9800";
+    return "#757575";
+  };
+
+  const getDate = (item) => {
+    if (item.type === "TO" && item.travel_order) {
+      return item.travel_order.date || item.travel_order.created_at || "N/A";
+    } else if (item.type === "OB" && item.official_business) {
+      return item.official_business.date_of_business || item.official_business.created_at || "N/A";
+    } else if (item.type === "PS" && item.pass_slip) {
+      return item.pass_slip.created_at || item.pass_slip.date || "N/A";
+    }
+    return item.date || item.created_at || "N/A";
+  };
+
+  const getDestination = (item) => {
+    if (item.type === "TO" && item.travel_order) {
+      return item.travel_order.destination || "N/A";
+    } else if (item.type === "OB" && item.official_business) {
+      return item.official_business.travel_to || "N/A";
+    } else if (item.type === "PS" && item.pass_slip) {
+      return item.pass_slip.place_to_visit || "N/A";
+    }
+    return "N/A";
+  };
+
+  const getEmployees = (item) => {
+    if (item.employees && Array.isArray(item.employees) && item.employees.length > 0) {
+      return item.employees.map(emp => 
+        `${emp.first_name || ""} ${emp.last_name || ""}`.trim()
+      ).filter(Boolean).join(", ") || "N/A";
+    }
+    return "N/A";
+  };
+
+  const getTypeLabel = (type) => {
+    switch (type) {
+      case "TO": return "Travel Orders";
+      case "OB": return "Official Business";
+      case "PS": return "Pass Slips";
+      default: return type;
+    }
+  };
+
+  return (
+    <Box sx={{ p: { xs: 2, sm: 3 } }}>
+      <Grid container spacing={2.25}>
+        <Grid item xs={12} sm={4}>
+          <Card
+            onClick={() => onNavigateToSubtab && onNavigateToSubtab("pending")}
+            sx={{
+              textAlign: "center",
+              p: 2.25,
+              background: "linear-gradient(135deg, #ff9800 0%, #f57c00 100%)",
+              color: "white",
+              borderRadius: 1.5,
+              boxShadow: "0 3px 9px rgba(0, 0, 0, 0.15)",
+              cursor: "pointer",
+              transition: "all 0.3s ease",
+              "&:hover": {
+                transform: "translateY(-3px)",
+                boxShadow: "0 6px 15px rgba(0, 0, 0, 0.25)",
+              },
+            }}
+          >
+            <Typography variant="h4" fontWeight="bold" sx={{ mb: 0.75, fontSize: "1.6rem" }}>
+              {pendingCount || 0}
+            </Typography>
+            <Typography variant="h6" sx={{ fontSize: "0.94rem" }}>Pending</Typography>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={4}>
+          <Card
+            onClick={() => onNavigateToSubtab && onNavigateToSubtab("approved")}
+            sx={{
+              textAlign: "center",
+              p: 2.25,
+              background: "linear-gradient(135deg, #4caf50 0%, #388e3c 100%)",
+              color: "white",
+              borderRadius: 1.5,
+              boxShadow: "0 3px 9px rgba(0, 0, 0, 0.15)",
+              cursor: "pointer",
+              transition: "all 0.3s ease",
+              "&:hover": {
+                transform: "translateY(-3px)",
+                boxShadow: "0 6px 15px rgba(0, 0, 0, 0.25)",
+              },
+            }}
+          >
+            <Typography variant="h4" fontWeight="bold" sx={{ mb: 0.75, fontSize: "1.6rem" }}>
+              {approvedCount || 0}
+            </Typography>
+            <Typography variant="h6" sx={{ fontSize: "0.94rem" }}>Approved</Typography>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={4}>
+          <Card
+            onClick={() => onNavigateToSubtab && onNavigateToSubtab("declined")}
+            sx={{
+              textAlign: "center",
+              p: 2.25,
+              background: "linear-gradient(135deg, #f44336 0%, #d32f2f 100%)",
+              color: "white",
+              borderRadius: 1.5,
+              boxShadow: "0 3px 9px rgba(0, 0, 0, 0.15)",
+              cursor: "pointer",
+              transition: "all 0.3s ease",
+              "&:hover": {
+                transform: "translateY(-3px)",
+                boxShadow: "0 6px 15px rgba(0, 0, 0, 0.25)",
+              },
+            }}
+          >
+            <Typography variant="h4" fontWeight="bold" sx={{ mb: 0.75, fontSize: "1.6rem" }}>
+              {declinedCount || 0}
+            </Typography>
+            <Typography variant="h6" sx={{ fontSize: "0.94rem" }}>Declined</Typography>
+          </Card>
+        </Grid>
+      </Grid>
+      
+      {/* TO, OB, and Pass Slips Count Cards */}
+      <Grid container spacing={2.25} sx={{ mt: 1 }}>
+        <Grid item xs={12} sm={4}>
+          <Card
+            onClick={() => handleCardClick("TO")}
+            sx={{
+              textAlign: "center",
+              p: 2.25,
+              background: "linear-gradient(135deg, #2196f3 0%, #1976d2 100%)",
+              color: "white",
+              borderRadius: 1.5,
+              boxShadow: "0 3px 9px rgba(0, 0, 0, 0.15)",
+              cursor: "pointer",
+              transition: "all 0.3s ease",
+              "&:hover": {
+                transform: "translateY(-3px)",
+                boxShadow: "0 6px 15px rgba(0, 0, 0, 0.25)",
+              },
+            }}
+          >
+            <Typography variant="h4" fontWeight="bold" sx={{ mb: 0.75, fontSize: "1.6rem" }}>
+              {toCount || 0}
+            </Typography>
+            <Typography variant="h6" sx={{ fontSize: "0.94rem" }}>Travel Orders</Typography>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={4}>
+          <Card
+            onClick={() => handleCardClick("OB")}
+            sx={{
+              textAlign: "center",
+              p: 2.25,
+              background: "linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%)",
+              color: "white",
+              borderRadius: 1.5,
+              boxShadow: "0 3px 9px rgba(0, 0, 0, 0.15)",
+              cursor: "pointer",
+              transition: "all 0.3s ease",
+              "&:hover": {
+                transform: "translateY(-3px)",
+                boxShadow: "0 6px 15px rgba(0, 0, 0, 0.25)",
+              },
+            }}
+          >
+            <Typography variant="h4" fontWeight="bold" sx={{ mb: 0.75, fontSize: "1.6rem" }}>
+              {obCount || 0}
+            </Typography>
+            <Typography variant="h6" sx={{ fontSize: "0.94rem" }}>Official Business</Typography>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={4}>
+          <Card
+            onClick={() => handleCardClick("PS")}
+            sx={{
+              textAlign: "center",
+              p: 2.25,
+              background: "linear-gradient(135deg, #00bcd4 0%, #0097a7 100%)",
+              color: "white",
+              borderRadius: 1.5,
+              boxShadow: "0 3px 9px rgba(0, 0, 0, 0.15)",
+              cursor: "pointer",
+              transition: "all 0.3s ease",
+              "&:hover": {
+                transform: "translateY(-3px)",
+                boxShadow: "0 6px 15px rgba(0, 0, 0, 0.25)",
+              },
+            }}
+          >
+            <Typography variant="h4" fontWeight="bold" sx={{ mb: 0.75, fontSize: "1.6rem" }}>
+              {passSlipCount || 0}
+            </Typography>
+            <Typography variant="h6" sx={{ fontSize: "0.94rem" }}>Pass Slips</Typography>
+          </Card>
+        </Grid>
+      </Grid>
+      
+      <Box sx={{ mt: 4 }}>
+        <StatisticsEmployee
+          data={employeeCountsOfficialBusiness}
+          travelOrderData={employeeCountsTravelOrder}
+          passSlipData={employeeCountsPassSlip}
+        />
+      </Box>
+
+      {/* Modal for displaying items list */}
+      <Dialog
+        open={openModal}
+        onClose={handleCloseModal}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            maxHeight: "90vh",
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            pb: 1,
+            borderBottom: "1px solid #e0e0e0",
+          }}
+        >
+          <Typography variant="h6" fontWeight="bold">
+            {getTypeLabel(modalType)} - All Records
+          </Typography>
+          <IconButton onClick={handleCloseModal} size="small">
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ p: 0, mt: 2 }}>
+          {modalData.length === 0 ? (
+            <Box sx={{ p: 3, textAlign: "center" }}>
+              <Typography variant="body1" color="text.secondary">
+                No records found
+              </Typography>
+            </Box>
+          ) : (
+            <TableContainer sx={{ maxHeight: "60vh" }}>
+              <Table stickyHeader size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{ fontWeight: "bold", backgroundColor: "#f5f5f5" }}>
+                      ID
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: "bold", backgroundColor: "#f5f5f5" }}>
+                      Date
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: "bold", backgroundColor: "#f5f5f5" }}>
+                      Employee(s)
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: "bold", backgroundColor: "#f5f5f5" }}>
+                      Destination/Place
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: "bold", backgroundColor: "#f5f5f5" }}>
+                      Status
+                    </TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {modalData.map((item, index) => {
+                    const status = getStatus(item);
+                    const statusColor = getStatusColor(status);
+                    return (
+                      <TableRow
+                        key={index}
+                        hover
+                        sx={{
+                          "&:hover": {
+                            backgroundColor: "#f9f9f9",
+                          },
+                        }}
+                      >
+                        <TableCell>
+                          {item.type === "TO" && item.travel_order?.travel_order_id
+                            ? item.travel_order.travel_order_id
+                            : item.type === "OB" && item.official_business?.official_business_id
+                            ? item.official_business.official_business_id
+                            : item.type === "PS" && item.pass_slip?.pass_slip_id
+                            ? item.pass_slip.pass_slip_id
+                            : index + 1}
+                        </TableCell>
+                        <TableCell>
+                          {dayjs(getDate(item)).isValid()
+                            ? dayjs(getDate(item)).format("MMM DD, YYYY")
+                            : getDate(item)}
+                        </TableCell>
+                        <TableCell>{getEmployees(item)}</TableCell>
+                        <TableCell>{getDestination(item)}</TableCell>
+                        <TableCell>
+                          <Chip
+                            label={status}
+                            sx={{
+                              backgroundColor: statusColor,
+                              color: "white",
+                              fontWeight: 600,
+                              fontSize: "0.75rem",
+                              minWidth: "80px",
+                            }}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 2, borderTop: "1px solid #e0e0e0" }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mr: "auto" }}>
+            Total: {modalData.length} record(s)
+          </Typography>
+          <Button onClick={handleCloseModal} variant="contained">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
+  );
+}
+
 // Weather Widget - Adjust font size on small screens
 export function WeatherWidget() {
   const [weather, setWeather] = useState("Loading...");
@@ -486,6 +983,7 @@ export function WeatherWidget() {
 
 export const ApprovingPending = ({
   data,
+  allPendingData, // ✅ Add this to receive all pending data (including past dates)
   isLoading,
   refetch,
   userRole,
@@ -495,6 +993,8 @@ export const ApprovingPending = ({
   notifications, // ✅ add this to receive the callback
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false); // ✅ used to track submission
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const headPositionId = Headposition?.id;
   const chiefId = Headposition?.chief_id || null; // ✅ extract chief_id directly
   const oicId = Headposition?.oic_id || null; // ✅ extract oic_id directly
@@ -516,6 +1016,124 @@ export const ApprovingPending = ({
       notifications(notifications);
     }
   }, [data]);
+
+  // State for date range and bulk selection
+  const [dateRangeAnchor, setDateRangeAnchor] = useState(null);
+  const [selectedDateRange, setSelectedDateRange] = useState({
+    start: null,
+    end: null,
+  });
+  const [selectedRows, setSelectedRows] = useState(new Set()); // For bulk selection
+  const [isSelectMode, setIsSelectMode] = useState(false); // Toggle checkbox visibility
+  const [typeFilterAnchor, setTypeFilterAnchor] = useState(null);
+  const [selectedTypeFilter, setSelectedTypeFilter] = useState("All"); // All, TO, OB, PS
+
+  // Filter data based on userRole, status, date range, and type filter
+  const filteredData = useMemo(() => {
+    if (!Array.isArray(data)) return [];
+    
+    let filtered = data.filter((row) => {
+      if (!row || !row.type) return false;
+
+      // Type filter
+      if (selectedTypeFilter !== "All" && row.type !== selectedTypeFilter) {
+        return false;
+      }
+
+      const status =
+        row.type === "OB" && row.official_business
+          ? row.official_business.status
+          : row.type === "TO" && row.travel_order
+          ? row.travel_order.status
+          : row.type === "PS" && row.pass_slip
+          ? row.pass_slip.status
+          : undefined;
+
+      // Role-based filtering
+      // Admin only sees requests confirmed by evaluator (pendingAdmin)
+      // Evaluator only sees initial pending requests (pending)
+      if (userRole === "admin") {
+        if (status !== "pendingAdmin") return false;
+      } else if (userRole === "evaluator") {
+        if (status !== "pending") return false;
+      } else {
+        return false;
+      }
+
+      // Date range filtering
+      if (selectedDateRange.start && selectedDateRange.end) {
+        let dateStr = null;
+        if (row.type === "OB" && row.official_business) {
+          dateStr = row.official_business.date_of_business || row.date;
+        } else if (row.type === "TO" && row.travel_order) {
+          dateStr = row.travel_order.date || row.date;
+        } else if (row.type === "PS" && row.pass_slip) {
+          dateStr = row.pass_slip.time_start || row.pass_slip.date || row.date;
+        } else {
+          dateStr = row.date;
+        }
+
+        if (dateStr) {
+          const rowDate = dayjs(dateStr).startOf('day');
+          if (rowDate.isValid()) {
+            const isInRange = rowDate.isBetween(
+              selectedDateRange.start.startOf("day"),
+              selectedDateRange.end.endOf("day"),
+              null,
+              "[]"
+            );
+            if (!isInRange) return false;
+          }
+        }
+      }
+
+      return true;
+    });
+    
+    return filtered;
+  }, [data, userRole, selectedDateRange, selectedTypeFilter]);
+
+  // Pagination logic
+  const isShowAll = rowsPerPage === "all";
+  const itemsPerPage = isShowAll ? filteredData.length : Number(rowsPerPage);
+  const totalPages = isShowAll ? 1 : Math.ceil(filteredData.length / itemsPerPage);
+
+  // Reset to page 1 if current page exceeds total pages
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(1);
+    }
+  }, [currentPage, totalPages]);
+
+  const startIndex = isShowAll ? 0 : (currentPage - 1) * itemsPerPage;
+  const endIndex = isShowAll
+    ? filteredData.length
+    : Math.min(startIndex + itemsPerPage, filteredData.length);
+  const paginatedData = filteredData.slice(startIndex, endIndex);
+
+  // Calculate page range to show (max 3 pages)
+  let startPage = 1;
+  let endPage = Math.min(3, totalPages);
+
+  if (currentPage > 2 && currentPage < totalPages - 1) {
+    startPage = currentPage - 1;
+    endPage = currentPage + 1;
+  } else if (currentPage >= totalPages - 1) {
+    startPage = Math.max(1, totalPages - 2);
+    endPage = totalPages;
+  }
+
+  const pageNumbers = [];
+  for (let i = startPage; i <= endPage; i++) {
+    pageNumbers.push(i);
+  }
+
+  const startEntry = filteredData.length === 0 ? 0 : startIndex + 1;
+  const endEntry = endIndex;
+
+  const handlePageChange = (event, value) => {
+    setCurrentPage(value);
+  };
 
   // You can use `chiefId`, `oicId`, and `regionalHeadId` in your logic below
 
@@ -584,6 +1202,187 @@ export const ApprovingPending = ({
   };
   const handleClickOpen = () => {
     setOpen(true);
+  };
+
+  // Bulk selection handlers
+  const handleSelectAll = (event) => {
+    if (event.target.checked) {
+      // Select ALL data rows (not the header row - header is not in filteredData)
+      const allDataRowIds = new Set(
+        filteredData.map((row, idx) => idx)
+      );
+      setSelectedRows(allDataRowIds);
+    } else {
+      setSelectedRows(new Set());
+    }
+  };
+
+  const handleSelectRow = (index) => {
+    const newSelected = new Set(selectedRows);
+    if (newSelected.has(index)) {
+      newSelected.delete(index);
+    } else {
+      newSelected.add(index);
+    }
+    setSelectedRows(newSelected);
+  };
+
+  const isRowSelected = (index) => selectedRows.has(index);
+  
+  // Check if all data rows are selected (not including header row)
+  const isAllSelected = filteredData.length > 0 && selectedRows.size === filteredData.length;
+
+  // Bulk approve function
+  const handleBulkApprove = async () => {
+    if (selectedRows.size === 0) return;
+
+    const result = await Swal.fire({
+      title: "Approve Selected Requests?",
+      text: `You are about to approve ${selectedRows.size} request(s). This action cannot be undone.`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, approve all",
+      cancelButtonText: "Cancel",
+    });
+
+    if (!result.isConfirmed) return;
+
+    setIsSubmitting(true);
+    const selectedItems = Array.from(selectedRows).map(idx => filteredData[idx]);
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const row of selectedItems) {
+      try {
+        const id = row.type === "OB" 
+          ? row.official_business?.id 
+          : row.type === "TO" 
+          ? row.travel_order?.id 
+          : row.pass_slip?.id;
+        
+        if (!id) {
+          failCount++;
+          continue;
+        }
+
+        const basePayload = {
+          status: "approved",
+          chief_id: chiefId || null,
+        };
+
+        if (oicId) basePayload.oic_id = oicId;
+
+        let response;
+        if (row.type === "TO") {
+          response = await axios.put(`http://localhost:8000/api/travel-orders/${id}`, basePayload);
+        } else if (row.type === "OB") {
+          response = await axios.put(`http://localhost:8000/api/official-business/${id}`, basePayload);
+        } else if (row.type === "PS") {
+          response = await axios.put(`http://localhost:8000/api/pass-slips/${id}`, basePayload);
+        }
+
+        if (response?.data?.success) {
+          successCount++;
+        } else {
+          failCount++;
+        }
+      } catch (error) {
+        console.error("Error approving item:", error);
+        failCount++;
+      }
+    }
+
+    setIsSubmitting(false);
+    setSelectedRows(new Set());
+
+    if (typeof refetch === "function") await refetch();
+    if (typeof refreshHistoryLogs === "function") await refreshHistoryLogs();
+
+    Swal.fire({
+      title: "Bulk Approval Complete",
+      text: `Successfully approved ${successCount} request(s). ${failCount > 0 ? `${failCount} failed.` : ""}`,
+      icon: successCount > 0 ? "success" : "error",
+    });
+  };
+
+  // Bulk decline function
+  const handleBulkDecline = async () => {
+    if (selectedRows.size === 0) return;
+
+    const { value: remarks } = await Swal.fire({
+      title: "Decline Selected Requests?",
+      text: `You are about to decline ${selectedRows.size} request(s). Please provide remarks.`,
+      icon: "warning",
+      input: "textarea",
+      inputLabel: "Remarks (Required)",
+      inputPlaceholder: "Enter reason for decline...",
+      inputAttributes: {
+        "aria-label": "Remarks for decline"
+      },
+      showCancelButton: true,
+      confirmButtonText: "Yes, decline all",
+      cancelButtonText: "Cancel",
+      inputValidator: (value) => {
+        if (!value) return "Remarks are required!";
+      },
+    });
+
+    if (!remarks) return;
+
+    setIsSubmitting(true);
+    const selectedItems = Array.from(selectedRows).map(idx => filteredData[idx]);
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const row of selectedItems) {
+      try {
+        const id = row.type === "OB" 
+          ? row.official_business?.id 
+          : row.type === "TO" 
+          ? row.travel_order?.id 
+          : row.pass_slip?.id;
+        
+        if (!id) {
+          failCount++;
+          continue;
+        }
+
+        const payload = {
+          status: "declined",
+          remarks: remarks,
+        };
+
+        let response;
+        if (row.type === "TO") {
+          response = await axios.put(`http://localhost:8000/api/travel-orders/${id}`, payload);
+        } else if (row.type === "OB") {
+          response = await axios.put(`http://localhost:8000/api/official-business/${id}`, payload);
+        } else if (row.type === "PS") {
+          response = await axios.put(`http://localhost:8000/api/pass-slips/${id}`, payload);
+        }
+
+        if (response?.data?.success) {
+          successCount++;
+        } else {
+          failCount++;
+        }
+      } catch (error) {
+        console.error("Error declining item:", error);
+        failCount++;
+      }
+    }
+
+    setIsSubmitting(false);
+    setSelectedRows(new Set());
+
+    if (typeof refetch === "function") await refetch();
+    if (typeof refreshHistoryLogs === "function") await refreshHistoryLogs();
+
+    Swal.fire({
+      title: "Bulk Decline Complete",
+      text: `Successfully declined ${successCount} request(s). ${failCount > 0 ? `${failCount} failed.` : ""}`,
+      icon: successCount > 0 ? "success" : "error",
+    });
   };
 
   const handleSubmitUpdate = async ({ chiefId, regionalHeadId, oicId }) => {
@@ -687,11 +1486,19 @@ export const ApprovingPending = ({
       }
 
       if (response?.success) {
-        Swal.fire(
-          "Approved!",
-          `The ${typeLabel} has been approved.`,
-          "success"
-        );
+        if (userRole === "evaluator") {
+          Swal.fire(
+            "Confirmed!",
+            `The ${typeLabel} has been confirmed and sent to the admin for final approval.`,
+            "success"
+          );
+        } else {
+          Swal.fire(
+            "Approved!",
+            `The ${typeLabel} has been approved.`,
+            "success"
+          );
+        }
 
         if (typeof refetch === "function") await refetch();
         if (typeof refreshHistoryLogs === "function")
@@ -699,13 +1506,13 @@ export const ApprovingPending = ({
 
         handleClose();
       } else {
-        Swal.fire("Error", `Failed to approve the ${typeLabel}.`, "error");
+        Swal.fire("Error", `Failed to ${userRole === "evaluator" ? "confirm" : "approve"} the ${typeLabel}.`, "error");
       }
     } catch (error) {
-      console.error(`Error approving ${type}:`, error);
+      console.error(`Error ${userRole === "evaluator" ? "confirming" : "approving"} ${type}:`, error);
       Swal.fire(
         "Error",
-        `An error occurred while approving the ${
+        `An error occurred while ${userRole === "evaluator" ? "confirming" : "approving"} the ${
           type === "OB"
             ? "official business"
             : type === "TO"
@@ -749,17 +1556,26 @@ export const ApprovingPending = ({
       }
 
       if (response?.success) {
-        Swal.fire(
-          "Declined!",
-          `The ${
-            type === "OB"
-              ? "official business"
-              : type === "PS"
-              ? "pass slip"
-              : "travel order"
-          } has been declined.`,
-          "success"
-        );
+        const typeLabel =
+          type === "OB"
+            ? "official business"
+            : type === "PS"
+            ? "pass slip"
+            : "travel order";
+        
+        if (userRole === "evaluator") {
+          Swal.fire(
+            "Removed!",
+            `The ${typeLabel} has been removed.`,
+            "success"
+          );
+        } else {
+          Swal.fire(
+            "Declined!",
+            `The ${typeLabel} has been declined.`,
+            "success"
+          );
+        }
 
         if (typeof refetch === "function") await refetch();
         if (typeof refreshHistoryLogs === "function")
@@ -769,15 +1585,16 @@ export const ApprovingPending = ({
       }
     } catch (error) {
       console.error("Error declining request:", error);
+      const typeLabel =
+        type === "OB"
+          ? "official business"
+          : type === "PS"
+          ? "pass slip"
+          : "travel order";
+      
       Swal.fire(
         "Error",
-        `Failed to decline the ${
-          type === "OB"
-            ? "official business"
-            : type === "PS"
-            ? "pass slip"
-            : "travel order"
-        }.`,
+        `Failed to ${userRole === "evaluator" ? "remove" : "decline"} the ${typeLabel}.`,
         "error"
       );
     }
@@ -859,12 +1676,77 @@ export const ApprovingPending = ({
       fixed
       sx={{
         p: 2,
-        height: "calc(100vh - 150px)", // Use height instead of maxHeight
-        overflowY: "auto",
+        overflowY: "hidden", // Disable vertical scrolling
+        overflowX: { xs: "auto", sm: "hidden" }, // Allow horizontal scroll on mobile
       }}
     >
       <>
-        <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 1 }}>
+        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 0.5, mt: 0, flexWrap: "wrap", gap: 1 }}>
+          <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+            <Button
+              variant="outlined"
+              startIcon={<AccessTimeOutlined />}
+              onClick={(e) => setDateRangeAnchor(e.currentTarget)}
+            >
+              Date Range
+            </Button>
+            <Button
+              variant="outlined"
+              endIcon={<ArrowDropDown />}
+              onClick={(e) => setTypeFilterAnchor(e.currentTarget)}
+            >
+              Filter: {selectedTypeFilter}
+            </Button>
+            <Menu
+              anchorEl={typeFilterAnchor}
+              open={Boolean(typeFilterAnchor)}
+              onClose={() => setTypeFilterAnchor(null)}
+            >
+              <MenuItem onClick={() => { setSelectedTypeFilter("All"); setTypeFilterAnchor(null); }}>
+                All
+              </MenuItem>
+              <MenuItem onClick={() => { setSelectedTypeFilter("TO"); setTypeFilterAnchor(null); }}>
+                Travel Orders
+              </MenuItem>
+              <MenuItem onClick={() => { setSelectedTypeFilter("OB"); setTypeFilterAnchor(null); }}>
+                Official Business
+              </MenuItem>
+              <MenuItem onClick={() => { setSelectedTypeFilter("PS"); setTypeFilterAnchor(null); }}>
+                Pass Slips
+              </MenuItem>
+            </Menu>
+            <Button
+              variant={isSelectMode ? "contained" : "outlined"}
+              onClick={() => {
+                setIsSelectMode(!isSelectMode);
+                if (isSelectMode) {
+                  setSelectedRows(new Set()); // Clear selection when exiting select mode
+                }
+              }}
+            >
+              {isSelectMode ? "Cancel Select" : "Select"}
+            </Button>
+            {isSelectMode && selectedRows.size > 0 && (
+              <>
+                <Button
+                  variant="contained"
+                  color="success"
+                  onClick={() => handleBulkApprove()}
+                  disabled={isSubmitting}
+                >
+                  Approve Selected ({selectedRows.size})
+                </Button>
+                <Button
+                  variant="contained"
+                  color="error"
+                  onClick={() => handleBulkDecline()}
+                  disabled={isSubmitting}
+                >
+                  Decline Selected ({selectedRows.size})
+                </Button>
+              </>
+            )}
+          </Box>
           <Button
             variant="contained"
             color="primary"
@@ -873,6 +1755,52 @@ export const ApprovingPending = ({
             Past Entries
           </Button>
         </Box>
+        
+        <Popover
+          open={Boolean(dateRangeAnchor)}
+          anchorEl={dateRangeAnchor}
+          onClose={() => setDateRangeAnchor(null)}
+          anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+        >
+          <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <Box sx={{ p: 2, display: "flex", flexDirection: "column", gap: 2, minWidth: 300 }}>
+              <DatePicker
+                label="Start Date"
+                value={selectedDateRange.start}
+                onChange={(newValue) => {
+                  setSelectedDateRange((prev) => ({ ...prev, start: newValue }));
+                }}
+                sx={{ width: "100%" }}
+              />
+              <DatePicker
+                label="End Date"
+                value={selectedDateRange.end}
+                onChange={(newValue) => {
+                  setSelectedDateRange((prev) => ({ ...prev, end: newValue }));
+                }}
+                sx={{ width: "100%" }}
+              />
+              <Box sx={{ display: "flex", gap: 1, justifyContent: "flex-end" }}>
+                <Button
+                  size="small"
+                  onClick={() => {
+                    setSelectedDateRange({ start: null, end: null });
+                    setDateRangeAnchor(null);
+                  }}
+                >
+                  Clear
+                </Button>
+                <Button
+                  size="small"
+                  variant="contained"
+                  onClick={() => setDateRangeAnchor(null)}
+                >
+                  Apply
+                </Button>
+              </Box>
+            </Box>
+          </LocalizationProvider>
+        </Popover>
         <Modal
           open={openPastEntriesModal}
           onClose={() => setOpenPastEntriesModal(false)}
@@ -944,25 +1872,29 @@ export const ApprovingPending = ({
               </TableHead>
 
               <TableBody>
-                {data.filter((row) => {
+                {(allPendingData || data || []).filter((row) => {
                   if (!row || !row.type) return false;
 
-                  const dateString =
-                    row.type === "OB"
-                      ? row.official_business?.created_at
-                      : row.type === "TO"
-                      ? row.travel_order?.date
-                      : row.type === "PS"
-                      ? row.pass_slip?.created_at
-                      : null;
+                  // Get the request date based on type (use the actual request date, not created_at)
+                  let dateStr = null;
+                  if (row.type === "OB" && row.official_business) {
+                    dateStr = row.official_business.date_of_business || row.official_business.created_at || row.date;
+                  } else if (row.type === "TO" && row.travel_order) {
+                    dateStr = row.travel_order.date || row.travel_order.created_at || row.date;
+                  } else if (row.type === "PS" && row.pass_slip) {
+                    dateStr = row.pass_slip.time_start || row.pass_slip.date || row.pass_slip.created_at || row.date;
+                  } else {
+                    dateStr = row.date;
+                  }
 
-                  if (!dateString) return false;
+                  if (!dateStr) return false;
 
-                  const rowDate = new Date(dateString);
+                  const rowDate = new Date(dateStr);
                   const today = new Date();
                   today.setHours(0, 0, 0, 0);
 
-                  if (rowDate > today) return false; // ✅ allow today and past
+                  // Only show past dates (before today)
+                  if (rowDate >= today) return false;
 
                   const status =
                     row.type === "OB" && row.official_business
@@ -992,25 +1924,29 @@ export const ApprovingPending = ({
                   </TableRow>
                 )}
 
-                {data
+                {(allPendingData || data || [])
                   .filter((row) => {
                     if (!row || !row.type) return false;
 
-                    const dateString =
-                      row.type === "OB"
-                        ? row.official_business?.created_at
-                        : row.type === "TO"
-                        ? row.travel_order?.date
-                        : row.type === "PS"
-                        ? row.pass_slip?.created_at
-                        : null;
+                    // Get the request date based on type (use the actual request date, not created_at)
+                    let dateStr = null;
+                    if (row.type === "OB" && row.official_business) {
+                      dateStr = row.official_business.date_of_business || row.official_business.created_at || row.date;
+                    } else if (row.type === "TO" && row.travel_order) {
+                      dateStr = row.travel_order.date || row.travel_order.created_at || row.date;
+                    } else if (row.type === "PS" && row.pass_slip) {
+                      dateStr = row.pass_slip.time_start || row.pass_slip.date || row.pass_slip.created_at || row.date;
+                    } else {
+                      dateStr = row.date;
+                    }
 
-                    if (!dateString) return false;
+                    if (!dateStr) return false;
 
-                    const rowDate = new Date(dateString);
+                    const rowDate = new Date(dateStr);
                     const today = new Date();
                     today.setHours(0, 0, 0, 0);
 
+                    // Only show past dates (before today)
                     if (rowDate >= today) return false;
 
                     const status =
@@ -1057,395 +1993,31 @@ export const ApprovingPending = ({
                         </TableCell>
 
                         <TableCell
-                          sx={{ border: "1px solid #ccc", textAlign: "center" }}
+                          sx={{ 
+                            border: "1px solid #ccc", 
+                            textAlign: "center",
+                            maxWidth: "200px",
+                            width: "200px",
+                          }}
                         >
                           <Box
                             sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 1,
+                              textAlign: "left",
                             }}
                           >
-                            {/* Info Icon */}
-                            <IconButton
-                              size="small"
-                              color="primary"
-                              onClick={() => {
-                                let selectedId = null;
-                                let selectedData = null;
-
-                                if (row.type === "OB") {
-                                  selectedId = row.official_business?.id;
-                                  // Merge employees into selectedData
-                                  selectedData = {
-                                    ...row.official_business,
-                                    employees: row.employees || [], // Ensure employees array is included
-                                  };
-
-                                  // console.log("Selected ID:", selectedId);
-                                  // console.log("Type:", row.type);
-                                  // console.log("Selected Data:", selectedData);
-
-                                  if (selectedData.employees.length > 0) {
-                                    selectedData.employees.forEach((emp) => {
-                                      console.log(
-                                        ` - ${emp.first_name} ${emp.last_name} (${emp.position_name})`
-                                      );
-                                    });
-                                  }
-                                } else if (row.type === "TO") {
-                                  selectedId = row.travel_order?.id;
-                                  selectedData = {
-                                    ...row.travel_order,
-                                    employees: row.employees || [],
-                                  };
-
-                                  if (selectedData.employees.length > 0) {
-                                    selectedData.employees.forEach((emp) => {
-                                      console.log(
-                                        ` - ${emp.first_name} ${emp.last_name} (${emp.position_name})`
-                                      );
-                                    });
-                                  }
-                                } else if (row.type === "PS") {
-                                  selectedId = row.pass_slip?.pass_slip_id;
-                                  selectedData = {
-                                    ...row.pass_slip,
-                                    employees: row.employees || [],
-                                  };
-                                }
-
-                                setSelectedTravelId(selectedId);
-                                setSelectedRowType(row.type);
-                                setSelectedTravelData(selectedData);
-                                setOpenInfo(true);
-                              }}
-                            >
-                              <InfoOutlinedIcon />
-                            </IconButton>
-
-                            <Dialog
-                              open={openInfo}
-                              onClose={() => setOpenInfo(false)}
-                              maxWidth="sm"
-                              fullWidth
-                              sx={{
-                                "& .MuiPaper-root": {
-                                  borderRadius: "12px",
-                                  boxShadow: "0px 4px 16px rgba(0, 0, 0, 0.1)",
-                                },
-                              }}
-                            >
-                              <DialogTitle
-                                sx={{
-                                  fontSize: "1.25rem",
-                                  fontWeight: 600,
-                                  padding: "16px 24px",
-                                  borderBottom: "1px solid #e0e0e0",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "space-between",
-                                }}
-                              >
-                                <span>Request Details</span>
-                                <IconButton
-                                  onClick={() => setOpenInfo(false)}
-                                  sx={{ color: "text.secondary" }}
-                                >
-                                  <CloseIcon fontSize="small" />
-                                </IconButton>
-                              </DialogTitle>
-
-                              <DialogContent dividers sx={{ padding: "24px" }}>
-                                {selectedTravelData ? (
-                                  <Box
-                                    sx={{
-                                      display: "grid",
-                                      gridTemplateColumns: "120px 1fr",
-                                      gap: "16px 8px",
-                                      alignItems: "center",
-                                    }}
-                                  >
-                                    {selectedRowType === "TO" && (
-                                      <>
-                                        <DetailLabel>ID</DetailLabel>
-                                        <DetailValue>
-                                          {selectedTravelData.id}
-                                        </DetailValue>
-
-                                        <DetailLabel>Request</DetailLabel>
-                                        <DetailValue>
-                                          {selectedTravelData.re}
-                                        </DetailValue>
-
-                                        <DetailLabel>Date</DetailLabel>
-                                        <DetailValue>
-                                          {selectedTravelData.date
-                                            ? new Date(
-                                                selectedTravelData.date
-                                              ).toLocaleDateString("en-PH", {
-                                                year: "numeric",
-                                                month: "long",
-                                                day: "numeric",
-                                              })
-                                            : "N/A"}
-                                        </DetailValue>
-
-                                        <DetailLabel>Destination</DetailLabel>
-                                        <DetailValue>
-                                          {selectedTravelData.destination}
-                                        </DetailValue>
-
-                                        <DetailLabel>Travel From</DetailLabel>
-                                        <DetailValue>
-                                          {selectedTravelData.travel_from
-                                            ? new Date(
-                                                selectedTravelData.travel_from
-                                              ).toLocaleDateString("en-PH", {
-                                                year: "numeric",
-                                                month: "long",
-                                                day: "numeric",
-                                              })
-                                            : "N/A"}
-                                        </DetailValue>
-
-                                        <DetailLabel>Travel To</DetailLabel>
-                                        <DetailValue>
-                                          {selectedTravelData.travel_to
-                                            ? new Date(
-                                                selectedTravelData.travel_to
-                                              ).toLocaleDateString("en-PH", {
-                                                year: "numeric",
-                                                month: "long",
-                                                day: "numeric",
-                                              })
-                                            : "N/A"}
-                                        </DetailValue>
-
-                                        <DetailLabel>Purpose</DetailLabel>
-                                        <DetailValue>
-                                          {selectedTravelData.purpose}
-                                        </DetailValue>
-
-                                        <DetailLabel>Status</DetailLabel>
-                                        <DetailValue component="div">
-                                          <StatusChip
-                                            status={selectedTravelData.status}
-                                          />
-                                        </DetailValue>
-
-                                        <DetailLabel>Remarks</DetailLabel>
-                                        <DetailValue>
-                                          {selectedTravelData.remarks || "None"}
-                                        </DetailValue>
-
-                                        {selectedTravelData.employees?.length >
-                                          0 && (
-                                          <>
-                                            <DetailLabel
-                                              sx={{ alignSelf: "start", pt: 1 }}
-                                            >
-                                              Employees
-                                            </DetailLabel>
-                                            <Box
-                                              sx={{
-                                                display: "flex",
-                                                flexDirection: "column",
-                                                gap: 1,
-                                              }}
-                                            >
-                                              {selectedTravelData.employees.map(
-                                                (emp, idx) => (
-                                                  <EmployeeBadge
-                                                    key={idx}
-                                                    name={`${emp.first_name} ${emp.last_name}`}
-                                                    position={emp.position_name}
-                                                  />
-                                                )
-                                              )}
-                                            </Box>
-                                          </>
-                                        )}
-                                      </>
-                                    )}
-
-                                    {selectedRowType === "OB" && (
-                                      <>
-                                        <DetailLabel>ID</DetailLabel>
-                                        <DetailValue>
-                                          {selectedTravelData.id}
-                                        </DetailValue>
-
-                                        <DetailLabel>Date</DetailLabel>
-                                        <DetailValue>
-                                          {selectedTravelData.date_of_business
-                                            ? new Date(
-                                                selectedTravelData.date_of_business
-                                              ).toLocaleDateString("en-PH", {
-                                                year: "numeric",
-                                                month: "long",
-                                                day: "numeric",
-                                              })
-                                            : "N/A"}
-                                        </DetailValue>
-
-                                        <DetailLabel>Purpose</DetailLabel>
-                                        <DetailValue>
-                                          {selectedTravelData.purpose}
-                                        </DetailValue>
-
-                                        <DetailLabel>Destination</DetailLabel>
-                                        <DetailValue>
-                                          {selectedTravelData.travel_to ||
-                                            "N/A"}
-                                        </DetailValue>
-
-                                        <DetailLabel>Status</DetailLabel>
-                                        <DetailValue>
-                                          <StatusChip
-                                            status={selectedTravelData.status}
-                                          />
-                                        </DetailValue>
-
-                                        <DetailLabel>Remarks</DetailLabel>
-                                        <DetailValue>
-                                          {selectedTravelData.remarks || "None"}
-                                        </DetailValue>
-
-                                        {selectedTravelData.employees?.length >
-                                          0 && (
-                                          <>
-                                            <DetailLabel
-                                              sx={{ alignSelf: "start", pt: 1 }}
-                                            >
-                                              Employees
-                                            </DetailLabel>
-                                            <Box
-                                              sx={{
-                                                display: "flex",
-                                                flexDirection: "column",
-                                                gap: 1,
-                                              }}
-                                            >
-                                              {selectedTravelData.employees.map(
-                                                (emp, idx) => (
-                                                  <EmployeeBadge
-                                                    key={idx}
-                                                    name={`${emp.first_name} ${emp.last_name}`}
-                                                    position={emp.position_name}
-                                                  />
-                                                )
-                                              )}
-                                            </Box>
-                                          </>
-                                        )}
-                                      </>
-                                    )}
-
-                                    {selectedRowType === "PS" && (
-                                      <>
-                                        <DetailLabel>ID</DetailLabel>
-                                        <DetailValue>
-                                          {selectedTravelData.pass_slip_id}
-                                        </DetailValue>
-
-                                        <DetailLabel>Reason</DetailLabel>
-                                        <DetailValue>
-                                          {selectedTravelData.reason}
-                                        </DetailValue>
-
-                                        <DetailLabel>Date</DetailLabel>
-                                        <DetailValue>
-                                          {new Date(
-                                            selectedTravelData.created_at
-                                          ).toLocaleDateString("en-PH", {
-                                            year: "numeric",
-                                            month: "long",
-                                            day: "numeric",
-                                          })}
-                                        </DetailValue>
-
-                                        <DetailLabel>
-                                          Place to Visit
-                                        </DetailLabel>
-                                        <DetailValue>
-                                          {selectedTravelData.place_to_visit ||
-                                            "N/A"}
-                                        </DetailValue>
-
-                                        <DetailLabel>Status</DetailLabel>
-                                        <DetailValue>
-                                          <StatusChip
-                                            status={selectedTravelData.status}
-                                          />
-                                        </DetailValue>
-
-                                        <DetailLabel>Remarks</DetailLabel>
-                                        <DetailValue>
-                                          {selectedTravelData.remarks || "None"}
-                                        </DetailValue>
-                                      </>
-                                    )}
-                                  </Box>
-                                ) : (
-                                  <Box
-                                    sx={{
-                                      display: "flex",
-                                      flexDirection: "column",
-                                      alignItems: "center",
-                                      py: 4,
-                                      color: "text.secondary",
-                                    }}
-                                  >
-                                    <InfoOutlinedIcon
-                                      sx={{ fontSize: "3rem", mb: 2 }}
-                                    />
-                                    <Typography variant="body1">
-                                      No data available
-                                    </Typography>
-                                  </Box>
-                                )}
-                              </DialogContent>
-
-                              <DialogActions
-                                sx={{
-                                  padding: "16px 24px",
-                                  borderTop: "1px solid #e0e0e0",
-                                }}
-                              >
-                                <Button
-                                  onClick={() => setOpenInfo(false)}
-                                  variant="contained"
-                                  sx={{
-                                    borderRadius: "8px",
-                                    textTransform: "none",
-                                    padding: "8px 16px",
-                                    fontWeight: 500,
-                                    boxShadow: "none",
-                                  }}
-                                >
-                                  Close
-                                </Button>
-                              </DialogActions>
-                            </Dialog>
-
-                            {/* Employee List */}
-                            <Box
-                              sx={{
-                                maxHeight: "100px",
-                                overflowY: "auto",
-                                textAlign: "left",
-                              }}
-                            >
-                              {row.employees &&
-                                row.employees.slice(0, 30).map((emp, i) => (
-                                  <div key={i}>
-                                    {emp.last_name}, {emp.first_name}{" "}
-                                    {emp.middle_name &&
-                                      `${emp.middle_name[0]}.`}
+                            {row.employees && row.employees.length > 0 ? (
+                              <>
+                                <div>
+                                  {row.employees[0].last_name}, {row.employees[0].first_name}{" "}
+                                  {row.employees[0].middle_name && `${row.employees[0].middle_name[0]}.`}
+                                </div>
+                                {row.employees.length > 1 && (
+                                  <div style={{ color: "#666", fontSize: "0.875rem" }}>
+                                    and {row.employees.length - 1} more
                                   </div>
-                                ))}
-                            </Box>
+                                )}
+                              </>
+                            ) : "N/A"}
                           </Box>
                         </TableCell>
 
@@ -1523,8 +2095,44 @@ export const ApprovingPending = ({
                               display: "flex",
                               justifyContent: "center",
                               gap: 1,
+                              flexWrap: "wrap",
                             }}
                           >
+                            <IconButton
+                              size="small"
+                              color="primary"
+                              onClick={() => {
+                                let selectedId = null;
+                                let selectedData = null;
+
+                                if (row.type === "OB") {
+                                  selectedId = row.official_business?.id;
+                                  selectedData = {
+                                    ...row.official_business,
+                                    employees: row.employees || [],
+                                  };
+                                } else if (row.type === "TO") {
+                                  selectedId = row.travel_order?.id;
+                                  selectedData = {
+                                    ...row.travel_order,
+                                    employees: row.employees || [],
+                                  };
+                                } else if (row.type === "PS") {
+                                  selectedId = row.pass_slip?.pass_slip_id;
+                                  selectedData = {
+                                    ...row.pass_slip,
+                                    employees: row.employees || [],
+                                  };
+                                }
+
+                                setSelectedTravelId(selectedId);
+                                setSelectedRowType(row.type);
+                                setSelectedTravelData(selectedData);
+                                setOpenInfo(true);
+                              }}
+                            >
+                              <InfoOutlinedIcon />
+                            </IconButton>
                             <Button
                               size="small"
                               variant="contained"
@@ -1556,21 +2164,21 @@ export const ApprovingPending = ({
                                     Swal.fire({
                                       title: `${
                                         row.type === "OB"
-                                          ? "Approve Official Business"
+                                          ? "Confirm Official Business"
                                           : row.type === "TO"
-                                          ? "Approve Travel Order"
-                                          : "Approve Pass Slip"
+                                          ? "Confirm Travel Order"
+                                          : "Confirm Pass Slip"
                                       }`,
-                                      text: `Are you sure you want to approve this ${
+                                      text: `Are you sure you want to confirm this ${
                                         row.type === "OB"
                                           ? "official business"
                                           : row.type === "TO"
                                           ? "travel order"
                                           : "pass slip"
-                                      }?`,
+                                      }? This will send it to the admin for final approval.`,
                                       icon: "warning",
                                       showCancelButton: true,
-                                      confirmButtonText: "Approve",
+                                      confirmButtonText: "Confirm",
                                       cancelButtonText: "Cancel",
                                       reverseButtons: false,
                                     }).then((result) => {
@@ -1587,7 +2195,7 @@ export const ApprovingPending = ({
                                 }
                               }}
                             >
-                              Approve
+                              {userRole === "evaluator" ? "Confirm" : "Approve"}
                             </Button>
 
                             <Button
@@ -1626,14 +2234,14 @@ export const ApprovingPending = ({
                                   Swal.fire({
                                     title:
                                       row.type === "OB"
-                                        ? "Decline Official Business"
+                                        ? userRole === "evaluator" ? "Remove Official Business" : "Decline Official Business"
                                         : row.type === "TO"
-                                        ? "Decline Travel Order"
+                                        ? userRole === "evaluator" ? "Remove Travel Order" : "Decline Travel Order"
                                         : row.type === "PS"
-                                        ? "Decline Pass Slip"
-                                        : "Decline Request",
+                                        ? userRole === "evaluator" ? "Remove Pass Slip" : "Decline Pass Slip"
+                                        : userRole === "evaluator" ? "Remove Request" : "Decline Request",
                                     text:
-                                      "Are you sure you want to decline this " +
+                                      `Are you sure you want to ${userRole === "evaluator" ? "remove" : "decline"} this ` +
                                       (row.type === "OB"
                                         ? "official business"
                                         : row.type === "TO"
@@ -1644,7 +2252,7 @@ export const ApprovingPending = ({
                                       "?",
                                     icon: "warning",
                                     showCancelButton: true,
-                                    confirmButtonText: "Decline",
+                                    confirmButtonText: userRole === "evaluator" ? "Remove" : "Decline",
                                     cancelButtonText: "Cancel",
                                     reverseButtons: false,
                                     zIndex: 999999999999,
@@ -1683,7 +2291,7 @@ export const ApprovingPending = ({
                                 }
                               }}
                             >
-                              Decline
+                              {userRole === "evaluator" ? "Remove" : "Decline"}
                             </Button>
                           </Box>
                         </TableCell>
@@ -1695,13 +2303,39 @@ export const ApprovingPending = ({
           </Box>
         </Modal>
       </>
+      {/* Rows per page selector */}
+      <Box sx={{ mb: 2, display: "flex", alignItems: "center", gap: 1 }}>
+        <Typography variant="body2">Show:</Typography>
+        <select
+          value={rowsPerPage}
+          onChange={(e) => {
+            const newRowsPerPage = e.target.value === "all" ? "all" : Number(e.target.value);
+            setRowsPerPage(newRowsPerPage);
+            setCurrentPage(1); // Reset to first page when changing rows per page
+          }}
+          style={{
+            padding: "4px 8px",
+            borderRadius: "4px",
+            border: "1px solid #ccc",
+            fontSize: "14px",
+          }}
+        >
+          <option value={10}>10</option>
+          <option value={25}>25</option>
+          <option value={50}>50</option>
+          <option value="all">Show All</option>
+        </select>
+        <Typography variant="body2">entries</Typography>
+      </Box>
+
       <TableContainer
         component={Paper}
         sx={{
           border: "1px solid #ccc",
           borderRadius: "8px",
           fontSize: "10",
-          overflowY: "auto",
+          overflowY: "hidden",
+          overflowX: { xs: "auto", sm: "hidden" }, // Allow horizontal scroll on mobile
         }}
       >
         {/* Check if the data is still being fetched */}
@@ -1728,6 +2362,8 @@ export const ApprovingPending = ({
                 ? row.pass_slip.status
                 : undefined;
 
+            // Admin only sees requests confirmed by evaluator (pendingAdmin)
+            // Evaluator only sees initial pending requests (pending)
             if (userRole === "admin") return status === "pendingAdmin";
             if (userRole === "evaluator") return status === "pending";
             return false;
@@ -1746,14 +2382,55 @@ export const ApprovingPending = ({
         ) : (
           <Table sx={{ minWidth: 650, borderCollapse: "collapse" }}>
             <TableHead sx={{ backgroundColor: "#f0f0f0" }}>
-              <TableRow>
+              <TableRow 
+                selected={false}
+                className="table-header-row"
+                aria-selected={false}
+                sx={{ 
+                  "&.Mui-selected": { 
+                    backgroundColor: "#f0f0f0 !important",
+                    "&:hover": {
+                      backgroundColor: "#f0f0f0 !important"
+                    }
+                  },
+                  "&:hover": {
+                    backgroundColor: "#f0f0f0 !important"
+                  },
+                  backgroundColor: "#f0f0f0 !important",
+                  userSelect: "none",
+                  WebkitUserSelect: "none",
+                  MozUserSelect: "none",
+                  msUserSelect: "none",
+                  // Explicitly prevent any selection styling
+                  "&.Mui-selected, &[aria-selected='true']": {
+                    backgroundColor: "#f0f0f0 !important",
+                    color: "inherit !important"
+                  }
+                }}
+              >
+                {isSelectMode && (
+                  <TableCell 
+                    padding="checkbox" 
+                    data-padding="checkbox"
+                    sx={{ 
+                      backgroundColor: "#f0f0f0 !important",
+                      pointerEvents: "auto !important"
+                    }}
+                  >
+                    <Checkbox
+                      indeterminate={selectedRows.size > 0 && selectedRows.size < filteredData.length}
+                      checked={isAllSelected}
+                      onChange={handleSelectAll}
+                      color="primary"
+                    />
+                  </TableCell>
+                )}
                 {[
-                  "ID",
+                  "Request Date",
                   "Full Name",
                   "TO/OB",
                   "Place",
-                  "Date",
-                  "Status",
+                  "Duration",
                   "Position",
                   "Actions",
                 ].map((header) => (
@@ -1772,81 +2449,274 @@ export const ApprovingPending = ({
             </TableHead>
             <TableBody>
               {(() => {
-                // Filter data for today's relevant rows based on userRole and status
-                const filteredData = data.filter((row) => {
-                  if (!row || !row.type) return false;
-
-                  const status =
-                    row.type === "OB" && row.official_business
-                      ? row.official_business.status
-                      : row.type === "TO" && row.travel_order
-                      ? row.travel_order.status
-                      : row.type === "PS" && row.pass_slip
-                      ? row.pass_slip.status
-                      : undefined;
-
-                  const today = dayjs().format("YYYY-MM-DD");
-
-                  const rowDate =
-                    row.type === "OB"
-                      ? row.official_business?.created_at
-                      : row.type === "TO"
-                      ? row.travel_order?.date
-                      : row.type === "PS"
-                      ? row.pass_slip?.created_at
-                      : null;
-
-                  const isToday = dayjs(rowDate).format("YYYY-MM-DD") === today;
-
-                  if (!isToday) return false;
-
-                  if (userRole === "admin") {
-                    return status === "pendingAdmin";
-                  }
-                  if (userRole === "evaluator") {
-                    return status === "pending";
-                  }
-                  return false;
-                });
-
                 // If no filtered rows, show a single row saying no data
                 if (filteredData.length === 0) {
                   return (
                     <TableRow>
-                      <TableCell colSpan={8} align="center">
+                      <TableCell colSpan={isSelectMode ? 8 : 7} align="center">
                         No data available
                       </TableCell>
                     </TableRow>
                   );
                 }
 
-                // Otherwise, map the filtered data to rows
-                return filteredData.map((row, index) => (
-                  <TableRow key={index}>
-                    {/* Employees */}
+                // Otherwise, map the paginated data to rows
+                return paginatedData.map((row, index) => {
+                  const globalIndex = startIndex + index;
+                  
+                  return (
+                  <TableRow key={index} selected={isSelectMode && isRowSelected(globalIndex)}>
+                    {isSelectMode && (
+                      <TableCell padding="checkbox">
+                        <Checkbox
+                          checked={isRowSelected(globalIndex)}
+                          onChange={() => handleSelectRow(globalIndex)}
+                          color="primary"
+                        />
+                      </TableCell>
+                    )}
+                    {/* Request Date */}
+                    <TableCell
+                      sx={{ border: "1px solid #ccc", textAlign: "center" }}
+                    >
+                      {(() => {
+                        const displayDate =
+                          row.type === "OB"
+                            ? row.official_business?.date
+                            : row.type === "TO"
+                            ? row.travel_order?.date
+                            : row.type === "PS"
+                            ? row.pass_slip?.date || row.pass_slip?.created_at
+                            : null;
+                        
+                        if (!displayDate) return "N/A";
+                        
+                        try {
+                          return new Date(displayDate).toLocaleDateString("en-PH", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          });
+                        } catch (e) {
+                          return "N/A";
+                        }
+                      })()}
+                    </TableCell>
+
+                    <TableCell
+                      sx={{ 
+                        border: "1px solid #ccc", 
+                        textAlign: "center",
+                        maxWidth: "200px",
+                        width: "200px",
+                      }}
+                    >
+                      <Box
+                        sx={{ 
+                          textAlign: "left",
+                        }}
+                      >
+                        {row.employees && row.employees.length > 0 ? (
+                          <>
+                            <div>
+                              {row.employees[0].last_name}, {row.employees[0].first_name}{" "}
+                              {row.employees[0].middle_name && `${row.employees[0].middle_name[0]}.`}
+                            </div>
+                            {row.employees.length > 1 && (
+                              <div style={{ color: "#666", fontSize: "0.875rem" }}>
+                                and {row.employees.length - 1} more
+                              </div>
+                            )}
+                          </>
+                        ) : "N/A"}
+                      </Box>
+                    </TableCell>
+
+                    {/* TO/OB/PS */}
                     <TableCell
                       sx={{ border: "1px solid #ccc", textAlign: "center" }}
                     >
                       {row.type === "OB"
-                        ? row.official_business?.id
+                        ? row.official_business?.data_from
                         : row.type === "TO"
-                        ? row.travel_order?.id
+                        ? row.travel_order?.data_from
                         : row.type === "PS"
-                        ? row.pass_slip?.pass_slip_id
+                        ? "Pass Slip"
                         : "N/A"}
                     </TableCell>
 
+                    {/* Place */}
+                    <TableCell
+                      sx={{ border: "1px solid #ccc", textAlign: "center" }}
+                    >
+                      {row.type === "OB"
+                        ? row.official_business?.travel_to
+                        : row.type === "TO"
+                        ? row.travel_order?.destination
+                        : row.type === "PS"
+                        ? row.pass_slip?.place_to_visit
+                        : "N/A"}
+                    </TableCell>
+
+                    {/* Duration */}
+                    <TableCell
+                      sx={{ border: "1px solid #ccc", textAlign: "center" }}
+                    >
+                      {(() => {
+                        try {
+                          if (row.type === "TO") {
+                            const startDate = row.travel_order?.travel_start_date;
+                            const endDate = row.travel_order?.travel_end_date;
+                            
+                            if (!startDate || !endDate) return "N/A";
+                            
+                            const start = new Date(startDate);
+                            const end = new Date(endDate);
+                            const diffTime = Math.abs(end - start);
+                            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 to include both start and end days
+                            
+                            const startFormatted = start.toLocaleDateString("en-PH", {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            });
+                            const endFormatted = end.toLocaleDateString("en-PH", {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            });
+                            
+                            return `${startFormatted} - ${endFormatted} (${diffDays} day${diffDays !== 1 ? "s" : ""})`;
+                          } else if (row.type === "OB") {
+                            // For OB, check if there are start/end dates available
+                            const startDate = row.official_business?.itinerary_from;
+                            const endDate = row.official_business?.itinerary_to;
+                            
+                            if (!startDate || !endDate) {
+                              // If no itinerary dates, check date_of_business
+                              const businessDate = row.official_business?.date_of_business;
+                              if (businessDate) {
+                                const dateFormatted = new Date(businessDate).toLocaleDateString("en-PH", {
+                                  year: "numeric",
+                                  month: "long",
+                                  day: "numeric",
+                                });
+                                return `${dateFormatted} (1 day)`;
+                              }
+                              return "N/A";
+                            }
+                            
+                            const start = new Date(startDate);
+                            const end = new Date(endDate);
+                            const diffTime = Math.abs(end - start);
+                            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                            
+                            const startFormatted = start.toLocaleDateString("en-PH", {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            });
+                            const endFormatted = end.toLocaleDateString("en-PH", {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            });
+                            
+                            return `${startFormatted} - ${endFormatted} (${diffDays} day${diffDays !== 1 ? "s" : ""})`;
+                          } else if (row.type === "PS") {
+                            // For Pass Slip, check time_start and time_end or date
+                            const startTime = row.pass_slip?.time_start;
+                            const endTime = row.pass_slip?.time_end;
+                            const date = row.pass_slip?.date;
+                            
+                            if (startTime && endTime) {
+                              const start = new Date(startTime);
+                              const end = new Date(endTime);
+                              
+                              // If same day, calculate hours
+                              if (start.toDateString() === end.toDateString()) {
+                                const diffHours = Math.abs(end - start) / (1000 * 60 * 60);
+                                const dateFormatted = start.toLocaleDateString("en-PH", {
+                                  year: "numeric",
+                                  month: "long",
+                                  day: "numeric",
+                                });
+                                return `${dateFormatted} (${Math.round(diffHours * 10) / 10} hour${diffHours !== 1 ? "s" : ""})`;
+                              } else {
+                                const diffTime = Math.abs(end - start);
+                                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                                
+                                const startFormatted = start.toLocaleDateString("en-PH", {
+                                  year: "numeric",
+                                  month: "long",
+                                  day: "numeric",
+                                });
+                                const endFormatted = end.toLocaleDateString("en-PH", {
+                                  year: "numeric",
+                                  month: "long",
+                                  day: "numeric",
+                                });
+                                
+                                return `${startFormatted} - ${endFormatted} (${diffDays} day${diffDays !== 1 ? "s" : ""})`;
+                              }
+                            } else if (date) {
+                              const dateFormatted = new Date(date).toLocaleDateString("en-PH", {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                              });
+                              return `${dateFormatted} (1 day)`;
+                            }
+                            
+                            return "N/A";
+                          }
+                          
+                          return "N/A";
+                        } catch (e) {
+                          console.error("Error calculating duration:", e);
+                          return "N/A";
+                        }
+                      })()}
+                    </TableCell>
+
+                    {/* Position */}
+                    <TableCell
+                      sx={{ border: "1px solid #ccc", textAlign: "center" }}
+                    >
+                      {(() => {
+                        if (
+                          (row.type === "PS" || row.type === "TO") &&
+                          row.pass_slip
+                        ) {
+                          return <div>{row.pass_slip.position_name}</div>;
+                        } else if (row.employees) {
+                          return row.employees.map((emp, i) => (
+                            <div key={i}>{emp.position_name}</div>
+                          ));
+                        } else {
+                          return null;
+                        }
+                      })()}
+                    </TableCell>
+
+                    {/* Actions */}
                     <TableCell
                       sx={{ border: "1px solid #ccc", textAlign: "center" }}
                     >
                       <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        sx={{
+                          display: "flex",
+                          flexDirection: "row",
+                          justifyContent: "center",
+                          alignItems: "center",
+                          gap: 0.5,
+                          flexWrap: "nowrap",
+                        }}
                       >
-                        {/* Info Icon */}
-
                         <IconButton
                           size="small"
                           color="primary"
+                          sx={{ flexShrink: 0 }}
                           onClick={() => {
                             let selectedId = null;
                             let selectedData = null;
@@ -1896,438 +2766,6 @@ export const ApprovingPending = ({
                         >
                           <InfoOutlinedIcon />
                         </IconButton>
-
-                        <Dialog
-                          open={openInfo}
-                          onClose={() => setOpenInfo(false)}
-                          maxWidth="sm"
-                          fullWidth
-                          sx={{
-                            "& .MuiPaper-root": {
-                              borderRadius: "12px",
-                              boxShadow: "0px 4px 16px rgba(0, 0, 0, 0.1)",
-                            },
-                          }}
-                        >
-                          <DialogTitle
-                            sx={{
-                              fontSize: "1.25rem",
-                              fontWeight: 600,
-                              padding: "16px 24px",
-                              borderBottom: "1px solid #e0e0e0",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "space-between",
-                            }}
-                          >
-                            <span>Request Details</span>
-                            <IconButton
-                              onClick={() => setOpenInfo(false)}
-                              sx={{ color: "text.secondary" }}
-                            >
-                              <CloseIcon fontSize="small" />
-                            </IconButton>
-                          </DialogTitle>
-
-                          <DialogContent dividers sx={{ padding: "24px" }}>
-                            {selectedTravelData ? (
-                              <Box
-                                sx={{
-                                  display: "grid",
-                                  gridTemplateColumns: "120px 1fr",
-                                  gap: "16px 8px",
-                                  alignItems: "center",
-                                }}
-                              >
-                                {selectedRowType === "TO" && (
-                                  <>
-                                    <DetailLabel>ID</DetailLabel>
-                                    <DetailValue>
-                                      {selectedTravelData.id}
-                                    </DetailValue>
-
-                                    <DetailLabel>Request</DetailLabel>
-                                    <DetailValue>
-                                      {selectedTravelData.re}
-                                    </DetailValue>
-
-                                    <DetailLabel>Date</DetailLabel>
-                                    <DetailValue>
-                                      {selectedTravelData.date
-                                        ? new Date(
-                                            selectedTravelData.date
-                                          ).toLocaleDateString("en-PH", {
-                                            year: "numeric",
-                                            month: "long",
-                                            day: "numeric",
-                                          })
-                                        : "N/A"}
-                                    </DetailValue>
-
-                                    <DetailLabel>Destination</DetailLabel>
-                                    <DetailValue>
-                                      {selectedTravelData.destination}
-                                    </DetailValue>
-
-                                    <DetailLabel>Travel From</DetailLabel>
-                                    <DetailValue>
-                                      {selectedTravelData.travel_from
-                                        ? new Date(
-                                            selectedTravelData.travel_from
-                                          ).toLocaleDateString("en-PH", {
-                                            year: "numeric",
-                                            month: "long",
-                                            day: "numeric",
-                                          })
-                                        : "N/A"}
-                                    </DetailValue>
-
-                                    <DetailLabel>Travel To</DetailLabel>
-                                    <DetailValue>
-                                      {selectedTravelData.travel_to
-                                        ? new Date(
-                                            selectedTravelData.travel_to
-                                          ).toLocaleDateString("en-PH", {
-                                            year: "numeric",
-                                            month: "long",
-                                            day: "numeric",
-                                          })
-                                        : "N/A"}
-                                    </DetailValue>
-
-                                    <DetailLabel>Purpose</DetailLabel>
-                                    <DetailValue>
-                                      {selectedTravelData.purpose}
-                                    </DetailValue>
-
-                                    <DetailLabel>Status</DetailLabel>
-                                    <DetailValue>
-                                      <StatusChip
-                                        status={selectedTravelData.status}
-                                      />
-                                    </DetailValue>
-
-                                    <DetailLabel>Remarks</DetailLabel>
-                                    <DetailValue>
-                                      {selectedTravelData.remarks || "None"}
-                                    </DetailValue>
-
-                                    {selectedTravelData.employees?.length >
-                                      0 && (
-                                      <>
-                                        <DetailLabel
-                                          sx={{ alignSelf: "start", pt: 1 }}
-                                        >
-                                          Employees
-                                        </DetailLabel>
-                                        <Box
-                                          sx={{
-                                            display: "flex",
-                                            flexDirection: "column",
-                                            gap: 1,
-                                          }}
-                                        >
-                                          {selectedTravelData.employees.map(
-                                            (emp, idx) => (
-                                              <EmployeeBadge
-                                                key={idx}
-                                                name={`${emp.first_name} ${emp.last_name}`}
-                                                position={emp.position_name}
-                                              />
-                                            )
-                                          )}
-                                        </Box>
-                                      </>
-                                    )}
-                                  </>
-                                )}
-
-                                {selectedRowType === "OB" && (
-                                  <>
-                                    <DetailLabel>ID</DetailLabel>
-                                    <DetailValue>
-                                      {selectedTravelData.id}
-                                    </DetailValue>
-
-                                    <DetailLabel>Date</DetailLabel>
-                                    <DetailValue>
-                                      {selectedTravelData.date_of_business
-                                        ? new Date(
-                                            selectedTravelData.date_of_business
-                                          ).toLocaleDateString("en-PH", {
-                                            year: "numeric",
-                                            month: "long",
-                                            day: "numeric",
-                                          })
-                                        : "N/A"}
-                                    </DetailValue>
-
-                                    <DetailLabel>Purpose</DetailLabel>
-                                    <DetailValue>
-                                      {selectedTravelData.purpose}
-                                    </DetailValue>
-
-                                    <DetailLabel>Itinerary From</DetailLabel>
-                                    <DetailValue>
-                                      {selectedTravelData.itinerary_from
-                                        ? new Date(
-                                            selectedTravelData.itinerary_from
-                                          ).toLocaleDateString("en-PH", {
-                                            year: "numeric",
-                                            month: "long",
-                                            day: "numeric",
-                                          })
-                                        : "N/A"}
-                                    </DetailValue>
-
-                                    <DetailLabel>Destination</DetailLabel>
-                                    <DetailValue>
-                                      {selectedTravelData.travel_to || "N/A"}
-                                    </DetailValue>
-
-                                    <DetailLabel>Status</DetailLabel>
-                                    <DetailValue>
-                                      <StatusChip
-                                        status={selectedTravelData.status}
-                                      />
-                                    </DetailValue>
-
-                                    <DetailLabel>Remarks</DetailLabel>
-                                    <DetailValue>
-                                      {selectedTravelData.remarks || "None"}
-                                    </DetailValue>
-
-                                    {selectedTravelData.employees?.length >
-                                      0 && (
-                                      <>
-                                        <DetailLabel
-                                          sx={{ alignSelf: "start", pt: 1 }}
-                                        >
-                                          Employees
-                                        </DetailLabel>
-                                        <Box
-                                          sx={{
-                                            display: "flex",
-                                            flexDirection: "column",
-                                            gap: 1,
-                                          }}
-                                        >
-                                          {selectedTravelData.employees.map(
-                                            (emp, idx) => (
-                                              <EmployeeBadge
-                                                key={idx}
-                                                name={`${emp.first_name} ${emp.last_name}`}
-                                                position={emp.position_name}
-                                              />
-                                            )
-                                          )}
-                                        </Box>
-                                      </>
-                                    )}
-                                  </>
-                                )}
-
-                                {selectedRowType === "PS" && (
-                                  <>
-                                    <DetailLabel>ID</DetailLabel>
-                                    <DetailValue>
-                                      {selectedTravelData.pass_slip_id}
-                                    </DetailValue>
-
-                                    <DetailLabel>Reason</DetailLabel>
-                                    <DetailValue>
-                                      {selectedTravelData.reason}
-                                    </DetailValue>
-
-                                    <DetailLabel>Date</DetailLabel>
-                                    <DetailValue>
-                                      {new Date(
-                                        selectedTravelData.created_at
-                                      ).toLocaleDateString("en-PH", {
-                                        year: "numeric",
-                                        month: "long",
-                                        day: "numeric",
-                                      })}
-                                    </DetailValue>
-
-                                    <DetailLabel>Place to Visit</DetailLabel>
-                                    <DetailValue>
-                                      {selectedTravelData.place_to_visit ||
-                                        "N/A"}
-                                    </DetailValue>
-
-                                    <DetailLabel>Status</DetailLabel>
-                                    <DetailValue>
-                                      <StatusChip
-                                        status={selectedTravelData.status}
-                                      />
-                                    </DetailValue>
-
-                                    <DetailLabel>Remarks</DetailLabel>
-                                    <DetailValue>
-                                      {selectedTravelData.remarks || "None"}
-                                    </DetailValue>
-                                  </>
-                                )}
-                              </Box>
-                            ) : (
-                              <Box
-                                sx={{
-                                  display: "flex",
-                                  flexDirection: "column",
-                                  alignItems: "center",
-                                  py: 4,
-                                  color: "text.secondary",
-                                }}
-                              >
-                                <InfoOutlinedIcon
-                                  sx={{ fontSize: "3rem", mb: 2 }}
-                                />
-                                <Typography variant="body1" component="div">
-                                  No data available
-                                </Typography>
-                              </Box>
-                            )}
-                          </DialogContent>
-
-                          <DialogActions
-                            sx={{
-                              padding: "16px 24px",
-                              borderTop: "1px solid #e0e0e0",
-                            }}
-                          >
-                            <Button
-                              onClick={() => setOpenInfo(false)}
-                              variant="contained"
-                              sx={{
-                                borderRadius: "8px",
-                                textTransform: "none",
-                                padding: "8px 16px",
-                                fontWeight: 500,
-                                boxShadow: "none",
-                              }}
-                            >
-                              Close
-                            </Button>
-                          </DialogActions>
-                        </Dialog>
-
-                        {/* Employee List */}
-                        <Box
-                          sx={{
-                            maxHeight: "100px",
-                            overflowY: "auto",
-                            textAlign: "left",
-                          }}
-                        >
-                          {row.employees &&
-                            row.employees.slice(0, 30).map((emp, i) => (
-                              <div key={i}>
-                                {emp.last_name}, {emp.first_name}{" "}
-                                {emp.middle_name && `${emp.middle_name[0]}.`}
-                              </div>
-                            ))}
-                        </Box>
-                      </Box>
-                    </TableCell>
-
-                    {/* TO/OB/PS */}
-                    <TableCell
-                      sx={{ border: "1px solid #ccc", textAlign: "center" }}
-                    >
-                      {row.type === "OB"
-                        ? row.official_business?.data_from
-                        : row.type === "TO"
-                        ? row.travel_order?.data_from
-                        : row.type === "PS"
-                        ? "Pass Slip"
-                        : "N/A"}
-                    </TableCell>
-
-                    {/* Place */}
-                    <TableCell
-                      sx={{ border: "1px solid #ccc", textAlign: "center" }}
-                    >
-                      {row.type === "OB"
-                        ? row.official_business?.travel_to
-                        : row.type === "TO"
-                        ? row.travel_order?.destination
-                        : row.type === "PS"
-                        ? row.pass_slip?.place_to_visit
-                        : "N/A"}
-                    </TableCell>
-
-                    {/* Date */}
-                    <TableCell
-                      sx={{ border: "1px solid #ccc", textAlign: "center" }}
-                    >
-                      {new Date(
-                        row.type === "OB"
-                          ? row.official_business?.date_of_business
-                          : row.type === "TO"
-                          ? row.travel_order?.date
-                          : row.type === "PS"
-                          ? row.pass_slip?.created_at
-                          : new Date()
-                      ).toLocaleDateString()}
-                    </TableCell>
-
-                    {/* Status */}
-                    <TableCell
-                      sx={{ border: "1px solid #ccc", textAlign: "center" }}
-                    >
-                      {row.type === "OB"
-                        ? row.official_business?.status === "pendingAdmin"
-                          ? "Pending (Admin)"
-                          : row.official_business?.status === "approved"
-                          ? "Approved"
-                          : "Pending"
-                        : row.type === "TO"
-                        ? row.travel_order?.status === "pendingAdmin"
-                          ? "Pending (Admin)"
-                          : row.travel_order?.status === "approved"
-                          ? "Approved"
-                          : "Pending"
-                        : row.type === "PS"
-                        ? row.pass_slip?.status === "pendingAdmin"
-                          ? "Pending (Admin)"
-                          : row.pass_slip?.status === "approved"
-                          ? "Approved"
-                          : "Pending"
-                        : "N/A"}
-                    </TableCell>
-
-                    {/* Position */}
-                    <TableCell
-                      sx={{ border: "1px solid #ccc", textAlign: "center" }}
-                    >
-                      {(() => {
-                        if (
-                          (row.type === "PS" || row.type === "TO") &&
-                          row.pass_slip
-                        ) {
-                          return <div>{row.pass_slip.position_name}</div>;
-                        } else if (row.employees) {
-                          return row.employees.map((emp, i) => (
-                            <div key={i}>{emp.position_name}</div>
-                          ));
-                        } else {
-                          return null;
-                        }
-                      })()}
-                    </TableCell>
-
-                    {/* Actions */}
-                    <TableCell
-                      sx={{ border: "1px solid #ccc", textAlign: "center" }}
-                    >
-                      <Box
-                        sx={{
-                          display: "flex",
-                          justifyContent: "center",
-                          gap: 1,
-                        }}
-                      >
                         <Button
                           size="small"
                           variant="contained"
@@ -2335,6 +2773,10 @@ export const ApprovingPending = ({
                             backgroundColor: "#1976D2",
                             color: "white",
                             borderRadius: "8px",
+                            minWidth: "auto",
+                            padding: "4px 12px",
+                            fontSize: "0.75rem",
+                            flexShrink: 0,
                           }}
                           onClick={() => {
                             let selectedId = null;
@@ -2354,23 +2796,23 @@ export const ApprovingPending = ({
                               Swal.fire({
                                 title: `${
                                   row.type === "OB"
-                                    ? "Approve Official Business"
+                                    ? "Confirm Official Business"
                                     : row.type === "TO"
-                                    ? "Approve Travel Order"
-                                    : "Approve Pass Slip"
+                                    ? "Confirm Travel Order"
+                                    : "Confirm Pass Slip"
                                 }`,
-                                text: `Are you sure you want to approve this ${
+                                text: `Are you sure you want to confirm this ${
                                   row.type === "OB"
                                     ? "official business"
                                     : row.type === "TO"
                                     ? "travel order"
                                     : "pass slip"
-                                }?`,
+                                }? This will send it to the admin for final approval.`,
                                 icon: "warning",
                                 showCancelButton: true,
-                                confirmButtonText: "Approve",
+                                confirmButtonText: "Confirm",
                                 cancelButtonText: "Cancel",
-                                reverseButtons: false, // 👈 Swaps back to default: Cancel left, Confirm right
+                                reverseButtons: false,
                               }).then((result) => {
                                 if (result.isConfirmed) {
                                   approveTravelOrder(selectedId, row.type);
@@ -2381,7 +2823,7 @@ export const ApprovingPending = ({
                             }
                           }}
                         >
-                          Approve
+                          {userRole === "evaluator" ? "Confirm" : "Approve"}
                         </Button>
 
                         <Button
@@ -2391,6 +2833,10 @@ export const ApprovingPending = ({
                             backgroundColor: "#D32F2F",
                             color: "white",
                             borderRadius: "8px",
+                            minWidth: "auto",
+                            padding: "4px 12px",
+                            fontSize: "0.75rem",
+                            flexShrink: 0,
                           }}
                           onClick={() => {
                             let id = null;
@@ -2421,11 +2867,11 @@ export const ApprovingPending = ({
                               Swal.fire({
                                 title:
                                   row.type === "OB"
-                                    ? "Decline Official Business"
+                                    ? userRole === "evaluator" ? "Remove Official Business" : "Decline Official Business"
                                     : row.type === "TO"
-                                    ? "Decline Travel Order"
-                                    : "Decline Pass Slip",
-                                text: `Are you sure you want to decline this ${
+                                    ? userRole === "evaluator" ? "Remove Travel Order" : "Decline Travel Order"
+                                    : userRole === "evaluator" ? "Remove Pass Slip" : "Decline Pass Slip",
+                                text: `Are you sure you want to ${userRole === "evaluator" ? "remove" : "decline"} this ${
                                   row.type === "OB"
                                     ? "official business"
                                     : row.type === "TO"
@@ -2434,7 +2880,7 @@ export const ApprovingPending = ({
                                 }?`,
                                 icon: "warning",
                                 showCancelButton: true,
-                                confirmButtonText: "Decline",
+                                confirmButtonText: userRole === "evaluator" ? "Remove" : "Decline",
                                 cancelButtonText: "Cancel",
                                 reverseButtons: false,
                               }).then((result) => {
@@ -2464,16 +2910,85 @@ export const ApprovingPending = ({
                             }
                           }}
                         >
-                          Decline
+                          {userRole === "evaluator" ? "Remove" : "Decline"}
                         </Button>
                       </Box>
                     </TableCell>
                   </TableRow>
-                ));
-              })()}
+                  );
+                });
+            })()}
             </TableBody>
+          </Table>
+        )}
 
-            {/* Modal for approving button in pending */}
+        {/* Pagination controls */}
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mt: 2,
+            mb: 2,
+            px: 2,
+          }}
+        >
+          <Typography variant="body2" color="text.secondary">
+            Showing {startEntry}-{endEntry} of {filteredData.length}
+          </Typography>
+
+          {/* Only show manual pagination when not showing all and has multiple pages */}
+          {!isShowAll && totalPages > 1 && (
+            <Box sx={{ display: "flex", gap: 1 }}>
+              <IconButton
+                onClick={() => handlePageChange(null, currentPage - 1)}
+                disabled={currentPage === 1}
+                size="small"
+              >
+                <ChevronLeftIcon fontSize="small" />
+              </IconButton>
+
+              {pageNumbers.map((pageNum) => (
+                <Button
+                  key={pageNum}
+                  variant={currentPage === pageNum ? "contained" : "text"}
+                  size="small"
+                  onClick={() => handlePageChange(null, pageNum)}
+                  sx={{
+                    fontWeight: currentPage === pageNum ? 600 : 400,
+                    backgroundColor:
+                      currentPage === pageNum ? "primary.main" : "transparent",
+                    color:
+                      currentPage === pageNum
+                        ? "primary.contrastText"
+                        : "text.primary",
+                    "&:hover": {
+                      backgroundColor:
+                        currentPage === pageNum
+                          ? "primary.dark"
+                          : "action.hover",
+                    },
+                    minWidth: 32,
+                    height: 32,
+                  }}
+                >
+                  {pageNum}
+                </Button>
+              ))}
+
+              <IconButton
+                onClick={() => handlePageChange(null, currentPage + 1)}
+                disabled={currentPage === totalPages || totalPages === 0}
+                size="small"
+              >
+                <ChevronRightIcon fontSize="small" />
+              </IconButton>
+            </Box>
+          )}
+        </Box>
+      </TableContainer>
+
+      {/* Modal for approving button in pending */}
             <BootstrapDialog
               onClose={handleClose}
               aria-labelledby="customized-dialog-title"
@@ -2588,9 +3103,94 @@ export const ApprovingPending = ({
                 </Card>
               </DialogContent>
             </BootstrapDialog>
-          </Table>
-        )}
-      </TableContainer>
+
+      {/* Info Modal Dialog */}
+      <Dialog open={openInfo && !!selectedTravelData} onClose={() => setOpenInfo(false)} maxWidth="md" fullWidth>
+          <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            Request Details
+            <IconButton onClick={() => setOpenInfo(false)}>
+              <CloseIcon />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
+              {selectedRowType === "TO" && selectedTravelData && (
+                <>
+                  <Box><Typography variant="body2" color="text.secondary" fontWeight={500}>Status:</Typography><Chip label={selectedTravelData.status || "N/A"} size="small" sx={{ fontWeight: 500, backgroundColor: selectedTravelData.status === "approved" || selectedTravelData.status === "Approved" ? "#e3f5e2" : selectedTravelData.status === "declined" || selectedTravelData.status === "Declined" ? "#ffecec" : "#fff8e6", color: selectedTravelData.status === "approved" || selectedTravelData.status === "Approved" ? "#2e7d32" : selectedTravelData.status === "declined" || selectedTravelData.status === "Declined" ? "#d32f2f" : "#ff9800" }} /></Box>
+                  <Box><Typography variant="body2" color="text.secondary" fontWeight={500}>Destination:</Typography><Typography variant="body1">{selectedTravelData.destination || "N/A"}</Typography></Box>
+                  <Box><Typography variant="body2" color="text.secondary" fontWeight={500}>Travel Start:</Typography><Typography variant="body1">{selectedTravelData.travel_start_date ? new Date(selectedTravelData.travel_start_date).toLocaleDateString() : "N/A"}</Typography></Box>
+                  <Box><Typography variant="body2" color="text.secondary" fontWeight={500}>Travel End:</Typography><Typography variant="body1">{selectedTravelData.travel_end_date ? new Date(selectedTravelData.travel_end_date).toLocaleDateString() : "N/A"}</Typography></Box>
+                  {selectedTravelData.remarks && <Box><Typography variant="body2" color="text.secondary" fontWeight={500}>Remarks:</Typography><Typography variant="body1">{selectedTravelData.remarks}</Typography></Box>}
+                  {selectedTravelData.employees && selectedTravelData.employees.length > 0 && (
+                    <Box>
+                      <Typography variant="body2" color="text.secondary" fontWeight={500}>Employees:</Typography>
+                      {selectedTravelData.employees.map((emp, i) => (
+                        <Box key={i} sx={{ display: "flex", alignItems: "center", gap: 1, padding: "6px 8px", backgroundColor: "#f5f5f5", borderRadius: "8px", mt: 1 }}>
+                          <Typography variant="body2" fontWeight={500}>{emp.last_name}, {emp.first_name}</Typography>
+                          {emp.position_name && (
+                            <>
+                              <Typography variant="body2" color="text.secondary">•</Typography>
+                              <Typography variant="body2" color="text.secondary">{emp.position_name}</Typography>
+                            </>
+                          )}
+                        </Box>
+                      ))}
+                    </Box>
+                  )}
+                </>
+              )}
+              {selectedRowType === "OB" && selectedTravelData && (
+                <>
+                  <Box><Typography variant="body2" color="text.secondary" fontWeight={500}>Status:</Typography><Chip label={selectedTravelData.status || "N/A"} size="small" sx={{ fontWeight: 500, backgroundColor: selectedTravelData.status === "approved" || selectedTravelData.status === "Approved" ? "#e3f5e2" : selectedTravelData.status === "declined" || selectedTravelData.status === "Declined" ? "#ffecec" : "#fff8e6", color: selectedTravelData.status === "approved" || selectedTravelData.status === "Approved" ? "#2e7d32" : selectedTravelData.status === "declined" || selectedTravelData.status === "Declined" ? "#d32f2f" : "#ff9800" }} /></Box>
+                  <Box><Typography variant="body2" color="text.secondary" fontWeight={500}>Travel To:</Typography><Typography variant="body1">{selectedTravelData.travel_to || "N/A"}</Typography></Box>
+                  <Box><Typography variant="body2" color="text.secondary" fontWeight={500}>Date of Business:</Typography><Typography variant="body1">{selectedTravelData.date_of_business ? new Date(selectedTravelData.date_of_business).toLocaleDateString() : "N/A"}</Typography></Box>
+                  {selectedTravelData.remarks && <Box><Typography variant="body2" color="text.secondary" fontWeight={500}>Remarks:</Typography><Typography variant="body1">{selectedTravelData.remarks}</Typography></Box>}
+                  {selectedTravelData.employees && selectedTravelData.employees.length > 0 && (
+                    <Box>
+                      <Typography variant="body2" color="text.secondary" fontWeight={500}>Employees:</Typography>
+                      {selectedTravelData.employees.map((emp, i) => (
+                        <Box key={i} sx={{ display: "flex", alignItems: "center", gap: 1, padding: "6px 8px", backgroundColor: "#f5f5f5", borderRadius: "8px", mt: 1 }}>
+                          <Typography variant="body2" fontWeight={500}>{emp.last_name}, {emp.first_name}</Typography>
+                          {emp.position_name && (
+                            <>
+                              <Typography variant="body2" color="text.secondary">•</Typography>
+                              <Typography variant="body2" color="text.secondary">{emp.position_name}</Typography>
+                            </>
+                          )}
+                        </Box>
+                      ))}
+                    </Box>
+                  )}
+                </>
+              )}
+              {selectedRowType === "PS" && selectedTravelData && (
+                <>
+                  <Box><Typography variant="body2" color="text.secondary" fontWeight={500}>Status:</Typography><Chip label={selectedTravelData.status || "N/A"} size="small" sx={{ fontWeight: 500, backgroundColor: selectedTravelData.status === "approved" || selectedTravelData.status === "Approved" ? "#e3f5e2" : selectedTravelData.status === "declined" || selectedTravelData.status === "Declined" ? "#ffecec" : "#fff8e6", color: selectedTravelData.status === "approved" || selectedTravelData.status === "Approved" ? "#2e7d32" : selectedTravelData.status === "declined" || selectedTravelData.status === "Declined" ? "#d32f2f" : "#ff9800" }} /></Box>
+                  <Box><Typography variant="body2" color="text.secondary" fontWeight={500}>Place to Visit:</Typography><Typography variant="body1">{selectedTravelData.place_to_visit || "N/A"}</Typography></Box>
+                  <Box><Typography variant="body2" color="text.secondary" fontWeight={500}>Time Start:</Typography><Typography variant="body1">{selectedTravelData.time_start ? new Date(selectedTravelData.time_start).toLocaleString() : "N/A"}</Typography></Box>
+                  <Box><Typography variant="body2" color="text.secondary" fontWeight={500}>Time End:</Typography><Typography variant="body1">{selectedTravelData.time_end ? new Date(selectedTravelData.time_end).toLocaleString() : "N/A"}</Typography></Box>
+                  {selectedTravelData.remarks && <Box><Typography variant="body2" color="text.secondary" fontWeight={500}>Remarks:</Typography><Typography variant="body1">{selectedTravelData.remarks}</Typography></Box>}
+                  {selectedTravelData.employees && selectedTravelData.employees.length > 0 && (
+                    <Box>
+                      <Typography variant="body2" color="text.secondary" fontWeight={500}>Employees:</Typography>
+                      {selectedTravelData.employees.map((emp, i) => (
+                        <Box key={i} sx={{ display: "flex", alignItems: "center", gap: 1, padding: "6px 8px", backgroundColor: "#f5f5f5", borderRadius: "8px", mt: 1 }}>
+                          <Typography variant="body2" fontWeight={500}>{emp.last_name}, {emp.first_name}</Typography>
+                          {emp.position_name && (
+                            <>
+                              <Typography variant="body2" color="text.secondary">•</Typography>
+                              <Typography variant="body2" color="text.secondary">{emp.position_name}</Typography>
+                            </>
+                          )}
+                        </Box>
+                      ))}
+                    </Box>
+                  )}
+                </>
+              )}
+            </Box>
+          </DialogContent>
+        </Dialog>
     </Container>
   );
 };
@@ -2629,11 +3229,245 @@ export function ApprovingHistory({
   const [selectedTravelId, setSelectedTravelId] = useState(null);
   const [pdfUrl, setPdfUrl] = useState(null);
   const [openPastEntriesModal, setOpenPastEntriesModal] = useState(false);
+  const [dateRangeAnchor, setDateRangeAnchor] = useState(null);
+  const [selectedDateRange, setSelectedDateRange] = useState({
+    start: null,
+    end: null,
+  });
+  const [typeFilterAnchor, setTypeFilterAnchor] = useState(null);
+  const [selectedTypeFilter, setSelectedTypeFilter] = useState("All"); // All, TO, OB, PS
+  // Info modal state (like in pending)
+  const [openInfo, setOpenInfo] = useState(false);
+  const [selectedTravelData, setSelectedTravelData] = useState(null);
+  const [selectedRowType, setSelectedRowType] = useState(null);
+  // Pagination state for main table
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  // Pagination state for modal table
+  const [modalCurrentPage, setModalCurrentPage] = useState(1);
+  const [modalRowsPerPage, setModalRowsPerPage] = useState(10);
+  
+  // Select mode state for bulk PDF download
+  const [isSelectMode, setIsSelectMode] = useState(false);
+  const [selectedRows, setSelectedRows] = useState(new Set());
+
+  // Detail components for info modal
+  const DetailLabel = ({ children, ...props }) => (
+    <Typography
+      variant="body2"
+      color="text.secondary"
+      fontWeight={500}
+      {...props}
+    >
+      {children}
+    </Typography>
+  );
+
+  const DetailValue = ({ children }) => (
+    <Typography variant="body1" component="div" fontWeight={400}>
+      {children}
+    </Typography>
+  );
+
+  const StatusChip = ({ status }) => (
+    <Chip
+      label={status}
+      size="small"
+      sx={{
+        fontWeight: 500,
+        backgroundColor:
+          status === "approved" || status === "Approved"
+            ? "#e3f5e2"
+            : status === "pending" || status === "Pending"
+            ? "#fff8e6"
+            : "#ffecec",
+        color:
+          status === "approved" || status === "Approved"
+            ? "#2e7d32"
+            : status === "pending" || status === "Pending"
+            ? "#ff9800"
+            : "#d32f2f",
+      }}
+    />
+  );
+
+  const EmployeeBadge = ({ name, position }) => (
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        gap: 1,
+        padding: "6px 8px",
+        backgroundColor: "#f5f5f5",
+        borderRadius: "8px",
+      }}
+    >
+      <Typography variant="body2" fontWeight={500}>
+        {name}
+      </Typography>
+      {position && (
+        <>
+          <Typography variant="body2" color="text.secondary">
+            •
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {position}
+          </Typography>
+        </>
+      )}
+    </Box>
+  );
+
+  // Apply date range and type filtering
+  const filteredDataWithDateRange = useMemo(() => {
+    let filtered = data || [];
+
+    // Type filter
+    if (selectedTypeFilter !== "All") {
+      filtered = filtered.filter((row) => row.type === selectedTypeFilter);
+    }
+
+    // Date range filtering
+    if (selectedDateRange.start && selectedDateRange.end) {
+      filtered = filtered.filter((row) => {
+        const status =
+          row.type === "OB" && row.official_business
+            ? row.official_business.status
+            : row.type === "TO" && row.travel_order
+            ? row.travel_order.status
+            : row.type === "PS" && row.pass_slip
+            ? row.pass_slip.status
+            : undefined;
+
+        if (status !== "approved") return false;
+
+        const dateStr =
+          row.type === "OB"
+            ? row.official_business?.date_of_business
+            : row.type === "TO"
+            ? row.travel_order?.date
+            : row.type === "PS"
+            ? row.pass_slip?.time_start || row.pass_slip?.date
+            : null;
+
+        if (!dateStr) return false;
+
+        const rowDate = dayjs(dateStr);
+        if (!rowDate.isValid()) return false;
+
+        return rowDate.isBetween(
+          selectedDateRange.start.startOf("day"),
+          selectedDateRange.end.endOf("day"),
+          null,
+          "[]"
+        );
+      });
+    }
+
+    return filtered;
+  }, [data, selectedDateRange, selectedTypeFilter]);
 
   const handleClose = () => {
     setOpen(false);
     setSelectedRow(null);
   };
+  
+  // Get filtered data for selection logic
+  const getFilteredData = () => {
+    return filteredDataWithDateRange.filter((row) => {
+      const status =
+        row.type === "OB" && row.official_business
+          ? row.official_business.status
+          : row.type === "TO" && row.travel_order
+          ? row.travel_order.status
+          : row.type === "PS" && row.pass_slip
+          ? row.pass_slip.status
+          : undefined;
+
+      // Filter for approved status (not declined)
+      if (status !== "approved" && status !== "Approved") return false;
+
+      return (
+        userRole === "admin" ||
+        userRole === "evaluator" ||
+        status === "approved" ||
+        status === "Approved"
+      );
+    });
+  };
+  
+  // Bulk selection handlers
+  const handleSelectAll = (event) => {
+    if (event.target.checked) {
+      const filteredData = getFilteredData();
+      const allDataRowIds = new Set(
+        filteredData.map((row, idx) => idx)
+      );
+      setSelectedRows(allDataRowIds);
+    } else {
+      setSelectedRows(new Set());
+    }
+  };
+
+  const handleSelectRow = (index) => {
+    const newSelected = new Set(selectedRows);
+    if (newSelected.has(index)) {
+      newSelected.delete(index);
+    } else {
+      newSelected.add(index);
+    }
+    setSelectedRows(newSelected);
+  };
+
+  const isRowSelected = (index) => selectedRows.has(index);
+  
+  const filteredDataForSelection = getFilteredData();
+  const isAllSelected = filteredDataForSelection.length > 0 && selectedRows.size === filteredDataForSelection.length;
+  
+  // Bulk download PDF function
+  const handleBulkDownloadPDF = async () => {
+    if (selectedRows.size === 0) {
+      Swal.fire({
+        title: "No Selection",
+        text: "Please select at least one row to download.",
+        icon: "warning",
+      });
+      return;
+    }
+
+    const filteredData = getFilteredData();
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const index of selectedRows) {
+      try {
+        const row = filteredData[index];
+        if (!row) continue;
+
+        // Trigger download for each row by calling handleClickOpen
+        handleClickOpen(row);
+        
+        // Wait a bit for the PDF modal to open and user can download
+        // In a real implementation, you might want to programmatically trigger downloads
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        
+        successCount++;
+      } catch (error) {
+        console.error("Error downloading PDF:", error);
+        failCount++;
+      }
+    }
+
+    setSelectedRows(new Set());
+    setIsSelectMode(false);
+
+    Swal.fire({
+      title: "Bulk Download Initiated",
+      text: `Opening PDF preview for ${successCount} item(s). ${failCount > 0 ? `${failCount} failed.` : ""}`,
+      icon: successCount > 0 ? "success" : "error",
+    });
+  };
+  
   const handleClickOpen = (row) => {
     if (!row) {
       console.error("No row data provided");
@@ -2697,15 +3531,194 @@ export function ApprovingHistory({
   };
 
   return (
-    <Container>
-      <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 1 }}>
+    <Container
+      sx={{
+        overflowY: "hidden",
+        overflowX: { xs: "auto", sm: "hidden" }, // Allow horizontal scroll on mobile
+      }}
+    >
+      <Box sx={{ 
+        display: "flex", 
+        justifyContent: { xs: "flex-start", sm: "flex-end" }, 
+        gap: { xs: 0.5, sm: 1 }, 
+        mb: 1,
+        flexWrap: "wrap",
+      }}>
+        <Button
+          variant="outlined"
+          color="primary"
+          onClick={(e) => setDateRangeAnchor(e.currentTarget)}
+          startIcon={<AccessTimeOutlined />}
+          sx={{
+            fontSize: { xs: "0.75rem", sm: "0.875rem" },
+            padding: { xs: "4px 8px", sm: "6px 16px" },
+            minWidth: { xs: "auto", sm: "64px" },
+          }}
+        >
+          <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+            Date Range
+          </Box>
+          <Box component="span" sx={{ display: { xs: "inline", sm: "none" } }}>
+            Date
+          </Box>
+        </Button>
+        <Button
+          variant="outlined"
+          color="primary"
+          endIcon={<ArrowDropDown />}
+          onClick={(e) => setTypeFilterAnchor(e.currentTarget)}
+          sx={{
+            fontSize: { xs: "0.75rem", sm: "0.875rem" },
+            padding: { xs: "4px 8px", sm: "6px 16px" },
+            minWidth: { xs: "auto", sm: "64px" },
+          }}
+        >
+          <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+            Filter: {selectedTypeFilter === "TO" ? "Travel Orders" : selectedTypeFilter === "OB" ? "Official Business" : selectedTypeFilter === "PS" ? "Pass Slips" : "All"}
+          </Box>
+          <Box component="span" sx={{ display: { xs: "inline", sm: "none" } }}>
+            {selectedTypeFilter === "TO" ? "TO" : selectedTypeFilter === "OB" ? "OB" : selectedTypeFilter === "PS" ? "PS" : "All"}
+          </Box>
+        </Button>
+        <Menu
+          anchorEl={typeFilterAnchor}
+          open={Boolean(typeFilterAnchor)}
+          onClose={() => setTypeFilterAnchor(null)}
+        >
+          <MenuItem onClick={() => { setSelectedTypeFilter("All"); setTypeFilterAnchor(null); }}>
+            All
+          </MenuItem>
+          <MenuItem onClick={() => { setSelectedTypeFilter("TO"); setTypeFilterAnchor(null); }}>
+            Travel Orders
+          </MenuItem>
+          <MenuItem onClick={() => { setSelectedTypeFilter("OB"); setTypeFilterAnchor(null); }}>
+            Official Business
+          </MenuItem>
+          <MenuItem onClick={() => { setSelectedTypeFilter("PS"); setTypeFilterAnchor(null); }}>
+            Pass Slips
+          </MenuItem>
+        </Menu>
+        {!isSelectMode ? (
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => setIsSelectMode(true)}
+            sx={{
+              fontSize: { xs: "0.75rem", sm: "0.875rem" },
+              padding: { xs: "4px 8px", sm: "6px 16px" },
+              minWidth: { xs: "auto", sm: "64px" },
+            }}
+          >
+            Select
+          </Button>
+        ) : (
+          <>
+            <Button
+              variant="outlined"
+              color="primary"
+              onClick={() => {
+                setIsSelectMode(false);
+                setSelectedRows(new Set());
+              }}
+              sx={{
+                fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                padding: { xs: "4px 8px", sm: "6px 16px" },
+                minWidth: { xs: "auto", sm: "64px" },
+              }}
+            >
+              <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+                Cancel Select
+              </Box>
+              <Box component="span" sx={{ display: { xs: "inline", sm: "none" } }}>
+                Cancel
+              </Box>
+            </Button>
+            {selectedRows.size > 0 && (
+              <Button
+                variant="contained"
+                color="success"
+                startIcon={<FileDownloadOutlined />}
+                onClick={handleBulkDownloadPDF}
+                disabled={isLoading}
+                sx={{
+                  fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                  padding: { xs: "4px 8px", sm: "6px 16px" },
+                  minWidth: { xs: "auto", sm: "64px" },
+                }}
+              >
+                <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+                  Download Selected PDFs ({selectedRows.size})
+                </Box>
+                <Box component="span" sx={{ display: { xs: "inline", sm: "none" } }}>
+                  Download ({selectedRows.size})
+                </Box>
+              </Button>
+            )}
+          </>
+        )}
         <Button
           variant="contained"
           color="primary"
           onClick={() => setOpenPastEntriesModal(true)}
+          sx={{
+            fontSize: { xs: "0.75rem", sm: "0.875rem" },
+            padding: { xs: "4px 8px", sm: "6px 16px" },
+            minWidth: { xs: "auto", sm: "64px" },
+          }}
         >
-          Past Entries
+          <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+            Past Entries
+          </Box>
+          <Box component="span" sx={{ display: { xs: "inline", sm: "none" } }}>
+            Past
+          </Box>
         </Button>
+
+        <Popover
+          open={Boolean(dateRangeAnchor)}
+          anchorEl={dateRangeAnchor}
+          onClose={() => setDateRangeAnchor(null)}
+          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        >
+          <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <Box sx={{ p: 2, display: "flex", flexDirection: "column", gap: 2, minWidth: 300 }}>
+              <DatePicker
+                label="Start Date"
+                value={selectedDateRange.start}
+                onChange={(newValue) => {
+                  setSelectedDateRange((prev) => ({ ...prev, start: newValue }));
+                }}
+                sx={{ width: "100%" }}
+              />
+              <DatePicker
+                label="End Date"
+                value={selectedDateRange.end}
+                onChange={(newValue) => {
+                  setSelectedDateRange((prev) => ({ ...prev, end: newValue }));
+                }}
+                sx={{ width: "100%" }}
+              />
+              <Box sx={{ display: "flex", gap: 1, justifyContent: "flex-end" }}>
+                <Button
+                  size="small"
+                  onClick={() => {
+                    setSelectedDateRange({ start: null, end: null });
+                    setDateRangeAnchor(null);
+                  }}
+                >
+                  Clear
+                </Button>
+                <Button
+                  size="small"
+                  variant="contained"
+                  onClick={() => setDateRangeAnchor(null)}
+                >
+                  Apply
+                </Button>
+              </Box>
+            </Box>
+          </LocalizationProvider>
+        </Popover>
 
         <Modal
           open={openPastEntriesModal}
@@ -2744,22 +3757,47 @@ export function ApprovingHistory({
               Past Entries
             </Typography>
 
+            {/* Rows per page selector for modal */}
+            <Box sx={{ mb: 2, display: "flex", alignItems: "center", gap: 1 }}>
+              <Typography variant="body2">Show:</Typography>
+              <select
+                value={modalRowsPerPage}
+                onChange={(e) => {
+                  const newRowsPerPage = e.target.value === "all" ? "all" : Number(e.target.value);
+                  setModalRowsPerPage(newRowsPerPage);
+                  setModalCurrentPage(1); // Reset to first page when changing rows per page
+                }}
+                style={{
+                  padding: "4px 8px",
+                  borderRadius: "4px",
+                  border: "1px solid #ccc",
+                  fontSize: "14px",
+                }}
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value="all">Show All</option>
+              </select>
+              <Typography variant="body2">entries</Typography>
+            </Box>
+
             <TableContainer
               component={Paper}
               sx={{
                 border: "1px solid #ccc",
                 borderRadius: "8px",
+                overflowX: { xs: "auto", sm: "hidden" }, // Allow horizontal scroll on mobile
+                overflowY: "visible",
                 fontSize: "10px",
-                maxHeight: 700,
-                overflowY: "auto",
                 position: "relative",
-                "&::-webkit-scrollbar": { width: "8px" },
-                "&::-webkit-scrollbar-thumb": {
-                  backgroundColor: "#888",
-                  borderRadius: "4px",
+                WebkitOverflowScrolling: "touch", // Smooth scrolling on iOS
+                "&::-webkit-scrollbar": {
+                  height: "8px",
                 },
-                "&::-webkit-scrollbar-thumb:hover": {
-                  backgroundColor: "#555",
+                "&::-webkit-scrollbar-thumb": {
+                  backgroundColor: "#ccc",
+                  borderRadius: "4px",
                 },
               }}
             >
@@ -2789,10 +3827,10 @@ export function ApprovingHistory({
               ) : (
                 <Table
                   sx={{
+                    minWidth: { xs: "800px", sm: "100%" }, // Ensure table has minimum width on mobile for scrolling
                     width: "100%",
                     borderCollapse: "collapse",
-                    overflowX: "auto",
-                    display: { xs: "block", sm: "table" },
+                    display: "table", // Keep as table for proper scrolling
                   }}
                 >
                   <TableHead sx={{ backgroundColor: "#f0f0f0" }}>
@@ -2826,8 +3864,8 @@ export function ApprovingHistory({
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {data
-                      .filter((row) => {
+                    {(() => {
+                      const modalFilteredData = data.filter((row) => {
                         const status =
                           row.type === "OB" && row.official_business
                             ? row.official_business.status
@@ -2837,7 +3875,7 @@ export function ApprovingHistory({
                             ? row.pass_slip.status
                             : undefined;
 
-                        if (status !== "approved") return false;
+                        if (status !== "declined") return false;
 
                         const today = new Date();
                         today.setHours(0, 0, 0, 0);
@@ -2859,8 +3897,35 @@ export function ApprovingHistory({
                           return true;
 
                         return status === "approved";
-                      })
-                      .map((row, index) => (
+                      });
+
+                      // Pagination logic for modal
+                      const isShowAll = modalRowsPerPage === "all";
+                      const itemsPerPage = isShowAll ? modalFilteredData.length : Number(modalRowsPerPage);
+                      const totalPages = isShowAll ? 1 : Math.ceil(modalFilteredData.length / itemsPerPage);
+
+                      // Reset to page 1 if current page exceeds total pages
+                      if (modalCurrentPage > totalPages && totalPages > 0) {
+                        setModalCurrentPage(1);
+                      }
+
+                      const startIndex = isShowAll ? 0 : (modalCurrentPage - 1) * itemsPerPage;
+                      const endIndex = isShowAll
+                        ? modalFilteredData.length
+                        : Math.min(startIndex + itemsPerPage, modalFilteredData.length);
+                      const paginatedModalData = modalFilteredData.slice(startIndex, endIndex);
+
+                      if (modalFilteredData.length === 0) {
+                        return (
+                          <TableRow>
+                            <TableCell colSpan={7} align="center">
+                              No data available
+                            </TableCell>
+                          </TableRow>
+                        );
+                      }
+
+                      return paginatedModalData.map((row, index) => (
                         <TableRow key={index}>
                           <TableCell
                             sx={{
@@ -3008,32 +4073,185 @@ export function ApprovingHistory({
                             </Box>
                           </TableCell>
                         </TableRow>
-                      ))}
+                      ));
+                    })()}
                   </TableBody>
                 </Table>
               )}
             </TableContainer>
+
+            {/* Pagination controls for modal */}
+            {(() => {
+              const modalFilteredData = data.filter((row) => {
+                const status =
+                  row.type === "OB" && row.official_business
+                    ? row.official_business.status
+                    : row.type === "TO" && row.travel_order
+                    ? row.travel_order.status
+                    : row.type === "PS" && row.pass_slip
+                    ? row.pass_slip.status
+                    : undefined;
+
+                if (status !== "approved") return false;
+
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+
+                const rowDate = new Date(
+                  row.type === "OB"
+                    ? row.official_business?.date_of_business
+                    : row.type === "TO"
+                    ? row.travel_order?.date
+                    : row.type === "PS"
+                    ? row.pass_slip?.created_at
+                    : null
+                );
+                rowDate.setHours(0, 0, 0, 0);
+
+                if (rowDate.getTime() >= today.getTime()) return false;
+
+                if (userRole === "admin" || userRole === "evaluator")
+                  return true;
+
+                return status === "approved";
+              });
+
+              const isShowAll = modalRowsPerPage === "all";
+              const itemsPerPage = isShowAll ? modalFilteredData.length : Number(modalRowsPerPage);
+              const totalPages = isShowAll ? 1 : Math.ceil(modalFilteredData.length / itemsPerPage);
+              const startIndex = isShowAll ? 0 : (modalCurrentPage - 1) * itemsPerPage;
+              const endIndex = isShowAll
+                ? modalFilteredData.length
+                : Math.min(startIndex + itemsPerPage, modalFilteredData.length);
+              const startEntry = modalFilteredData.length === 0 ? 0 : startIndex + 1;
+              const endEntry = endIndex;
+
+              // Calculate page range to show (max 3 pages)
+              let startPage = 1;
+              let endPage = Math.min(3, totalPages);
+
+              if (modalCurrentPage > 2 && modalCurrentPage < totalPages - 1) {
+                startPage = modalCurrentPage - 1;
+                endPage = modalCurrentPage + 1;
+              } else if (modalCurrentPage >= totalPages - 1) {
+                startPage = Math.max(1, totalPages - 2);
+                endPage = totalPages;
+              }
+
+              const pageNumbers = [];
+              for (let i = startPage; i <= endPage; i++) {
+                pageNumbers.push(i);
+              }
+
+              return (
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    mt: 2,
+                    mb: 2,
+                    px: 2,
+                  }}
+                >
+                  <Typography variant="body2" color="text.secondary">
+                    Showing {startEntry}-{endEntry} of {modalFilteredData.length}
+                  </Typography>
+
+                  {!isShowAll && totalPages > 1 && (
+                    <Box sx={{ display: "flex", gap: 1 }}>
+                      <IconButton
+                        onClick={() => setModalCurrentPage(modalCurrentPage - 1)}
+                        disabled={modalCurrentPage === 1}
+                        size="small"
+                      >
+                        <ChevronLeftIcon fontSize="small" />
+                      </IconButton>
+
+                      {pageNumbers.map((pageNum) => (
+                        <Button
+                          key={pageNum}
+                          variant={modalCurrentPage === pageNum ? "contained" : "text"}
+                          size="small"
+                          onClick={() => setModalCurrentPage(pageNum)}
+                          sx={{
+                            fontWeight: modalCurrentPage === pageNum ? 600 : 400,
+                            backgroundColor:
+                              modalCurrentPage === pageNum ? "primary.main" : "transparent",
+                            color:
+                              modalCurrentPage === pageNum
+                                ? "primary.contrastText"
+                                : "text.primary",
+                            "&:hover": {
+                              backgroundColor:
+                                modalCurrentPage === pageNum
+                                  ? "primary.dark"
+                                  : "action.hover",
+                            },
+                            minWidth: 32,
+                            height: 32,
+                          }}
+                        >
+                          {pageNum}
+                        </Button>
+                      ))}
+
+                      <IconButton
+                        onClick={() => setModalCurrentPage(modalCurrentPage + 1)}
+                        disabled={modalCurrentPage === totalPages || totalPages === 0}
+                        size="small"
+                      >
+                        <ChevronRightIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  )}
+                </Box>
+              );
+            })()}
           </Box>
         </Modal>
       </Box>
+      {/* Rows per page selector */}
+      <Box sx={{ mb: 2, display: "flex", alignItems: "center", gap: 1 }}>
+        <Typography variant="body2">Show:</Typography>
+        <select
+          value={rowsPerPage}
+          onChange={(e) => {
+            const newRowsPerPage = e.target.value === "all" ? "all" : Number(e.target.value);
+            setRowsPerPage(newRowsPerPage);
+            setCurrentPage(1); // Reset to first page when changing rows per page
+          }}
+          style={{
+            padding: "4px 8px",
+            borderRadius: "4px",
+            border: "1px solid #ccc",
+            fontSize: "14px",
+          }}
+        >
+          <option value={10}>10</option>
+          <option value={25}>25</option>
+          <option value={50}>50</option>
+          <option value="all">Show All</option>
+        </select>
+        <Typography variant="body2">entries</Typography>
+      </Box>
+
       <TableContainer
         component={Paper}
         sx={{
           border: "1px solid #ccc",
           borderRadius: "8px",
           fontSize: "10px",
-          maxHeight: "700",
-          overflowY: "auto",
-          position: "relative", // <-- ADD THIS
+          overflowY: "hidden",
+          overflowX: { xs: "auto", sm: "hidden" }, // Allow horizontal scroll on mobile
+          position: "relative",
+          WebkitOverflowScrolling: "touch", // Smooth scrolling on iOS
           "&::-webkit-scrollbar": {
-            width: "8px",
+            height: "8px",
           },
           "&::-webkit-scrollbar-thumb": {
-            backgroundColor: "#888",
+            backgroundColor: "#ccc",
             borderRadius: "4px",
-          },
-          "&::-webkit-scrollbar-thumb:hover": {
-            backgroundColor: "#555",
           },
         }}
       >
@@ -3061,15 +4279,62 @@ export function ApprovingHistory({
             No data available
           </Box>
         ) : (
-          <Table sx={{ minWidth: 650, borderCollapse: "collapse" }}>
+          <Table 
+            sx={{ 
+              minWidth: { xs: "800px", sm: "650px" }, // Ensure table has minimum width on mobile for scrolling
+              borderCollapse: "collapse",
+              width: "100%",
+            }}
+          >
             <TableHead sx={{ backgroundColor: "#f0f0f0" }}>
-              <TableRow>
+              <TableRow 
+                selected={false}
+                className="table-header-row"
+                aria-selected={false}
+                sx={{ 
+                  "&.Mui-selected": { 
+                    backgroundColor: "#f0f0f0 !important",
+                    "&:hover": {
+                      backgroundColor: "#f0f0f0 !important"
+                    }
+                  },
+                  "&:hover": {
+                    backgroundColor: "#f0f0f0 !important"
+                  },
+                  backgroundColor: "#f0f0f0 !important",
+                  userSelect: "none",
+                  WebkitUserSelect: "none",
+                  MozUserSelect: "none",
+                  msUserSelect: "none",
+                  "&.Mui-selected, &[aria-selected='true']": {
+                    backgroundColor: "#f0f0f0 !important",
+                    color: "inherit !important"
+                  }
+                }}
+              >
+                {isSelectMode && (
+                  <TableCell 
+                    padding="checkbox" 
+                    data-padding="checkbox"
+                    sx={{ 
+                      backgroundColor: "#f0f0f0 !important",
+                      pointerEvents: "auto !important"
+                    }}
+                  >
+                    <Checkbox
+                      indeterminate={selectedRows.size > 0 && selectedRows.size < filteredDataForSelection.length}
+                      checked={isAllSelected}
+                      onChange={handleSelectAll}
+                      color="primary"
+                    />
+                  </TableCell>
+                )}
                 {[
+                  "Request Date",
                   "Full Name",
                   "TO/OB",
                   "Place",
-                  "Date",
-                  "Status",
+                  "Duration",
                   "Position",
                   "Actions",
                 ].map((header) => (
@@ -3088,7 +4353,7 @@ export function ApprovingHistory({
             </TableHead>
             <TableBody>
               {(() => {
-                const filteredData = data.filter((row) => {
+                const filteredData = filteredDataWithDateRange.filter((row) => {
                   const status =
                     row.type === "OB" && row.official_business
                       ? row.official_business.status
@@ -3098,55 +4363,129 @@ export function ApprovingHistory({
                       ? row.pass_slip.status
                       : undefined;
 
-                  if (status !== "approved") return false;
+                  // Filter for approved status (not declined)
+                  if (status !== "approved" && status !== "Approved") return false;
 
-                  const today = new Date();
-                  today.setHours(0, 0, 0, 0);
-
-                  const rowDate = new Date(
-                    row.type === "OB"
-                      ? row.official_business?.date_of_business
-                      : row.type === "TO"
-                      ? row.travel_order?.date
-                      : row.type === "PS"
-                      ? row.pass_slip?.created_at
-                      : null
-                  );
-                  rowDate.setHours(0, 0, 0, 0);
-
-                  // Changed: Show only today's entries
-                  if (rowDate.getTime() !== today.getTime()) return false;
-
+                  // Show all approved data by default (no date filtering)
+                  // Date filtering is applied via filteredDataWithDateRange when user selects a date range
                   return (
                     userRole === "admin" ||
                     userRole === "evaluator" ||
-                    status === "approved"
+                    status === "approved" ||
+                    status === "Approved"
                   );
                 });
+
+                // Pagination logic
+                const isShowAll = rowsPerPage === "all";
+                const itemsPerPage = isShowAll ? filteredData.length : Number(rowsPerPage);
+                const totalPages = isShowAll ? 1 : Math.ceil(filteredData.length / itemsPerPage);
+
+                const startIndex = isShowAll ? 0 : (currentPage - 1) * itemsPerPage;
+                const endIndex = isShowAll
+                  ? filteredData.length
+                  : Math.min(startIndex + itemsPerPage, filteredData.length);
+                const paginatedData = filteredData.slice(startIndex, endIndex);
+
+                // Calculate page range to show (max 3 pages)
+                let startPage = 1;
+                let endPage = Math.min(3, totalPages);
+
+                if (currentPage > 2 && currentPage < totalPages - 1) {
+                  startPage = currentPage - 1;
+                  endPage = currentPage + 1;
+                } else if (currentPage >= totalPages - 1) {
+                  startPage = Math.max(1, totalPages - 2);
+                  endPage = totalPages;
+                }
+
+                const pageNumbers = [];
+                for (let i = startPage; i <= endPage; i++) {
+                  pageNumbers.push(i);
+                }
+
+                const startEntry = filteredData.length === 0 ? 0 : startIndex + 1;
+                const endEntry = endIndex;
 
                 if (filteredData.length === 0) {
                   return (
                     <TableRow>
-                      <TableCell colSpan={7} align="center">
+                      <TableCell colSpan={isSelectMode ? 8 : 7} align="center">
                         No data available for today.
                       </TableCell>
                     </TableRow>
                   );
                 }
 
-                return filteredData.map((row, index) => (
-                  <TableRow key={index}>
-                    {/* Employees */}
+                return paginatedData.map((row, index) => {
+                  const globalIndex = startIndex + index;
+                  
+                  return (
+                  <TableRow key={index} selected={isSelectMode && isRowSelected(globalIndex)}>
+                    {isSelectMode && (
+                      <TableCell padding="checkbox">
+                        <Checkbox
+                          checked={isRowSelected(globalIndex)}
+                          onChange={() => handleSelectRow(globalIndex)}
+                          color="primary"
+                        />
+                      </TableCell>
+                    )}
+                    {/* Request Date */}
                     <TableCell
                       sx={{ border: "1px solid #ccc", textAlign: "center" }}
                     >
-                      <Box sx={{ maxHeight: "100px", overflowY: "auto" }}>
-                        {row.employees.slice(0, 30).map((emp, i) => (
-                          <div key={i}>
-                            {emp.last_name}, {emp.first_name}{" "}
-                            {emp.middle_name && `${emp.middle_name[0]}.`}
-                          </div>
-                        ))}
+                      {(() => {
+                        const requestDate =
+                          row.type === "OB"
+                            ? row.official_business?.date
+                            : row.type === "TO"
+                            ? row.travel_order?.date
+                            : row.type === "PS"
+                            ? row.pass_slip?.date || row.pass_slip?.created_at
+                            : null;
+                        
+                        if (!requestDate) return "N/A";
+                        
+                        try {
+                          return new Date(requestDate).toLocaleDateString("en-PH", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          });
+                        } catch (e) {
+                          return "N/A";
+                        }
+                      })()}
+                    </TableCell>
+
+                    {/* Full Name */}
+                    <TableCell
+                      sx={{ 
+                        border: "1px solid #ccc", 
+                        textAlign: "center",
+                        maxWidth: "200px",
+                        width: "200px",
+                      }}
+                    >
+                      <Box
+                        sx={{ 
+                          textAlign: "left",
+                        }}
+                      >
+                        {row.employees && row.employees.length > 0 ? (
+                          <>
+                            <div>
+                              {row.employees[0].last_name}, {row.employees[0].first_name}{" "}
+                              {row.employees[0].middle_name && `${row.employees[0].middle_name[0]}.`}
+                            </div>
+                            {row.employees.length > 1 && (
+                              <div style={{ color: "#666", fontSize: "0.875rem" }}>
+                                and {row.employees.length - 1} more
+                              </div>
+                            )}
+                          </>
+                        ) : "N/A"}
                       </Box>
                     </TableCell>
 
@@ -3176,38 +4515,125 @@ export function ApprovingHistory({
                         : "-"}
                     </TableCell>
 
-                    {/* Date */}
+                    {/* Duration */}
                     <TableCell
                       sx={{ border: "1px solid #ccc", textAlign: "center" }}
                     >
-                      {new Date(
-                        row.type === "OB"
-                          ? row.official_business?.date_of_business
-                          : row.type === "TO"
-                          ? row.travel_order?.date
-                          : row.type === "PS"
-                          ? row.pass_slip?.created_at
-                          : ""
-                      ).toLocaleDateString()}
-                    </TableCell>
-
-                    {/* Status */}
-                    <TableCell
-                      sx={{ border: "1px solid #ccc", textAlign: "center" }}
-                    >
-                      {row.type === "OB" && row.official_business
-                        ? row.official_business.status === "approved"
-                          ? "Approved"
-                          : "Pending"
-                        : row.type === "TO" && row.travel_order
-                        ? row.travel_order.status === "approved"
-                          ? "Approved"
-                          : "Pending"
-                        : row.type === "PS" && row.pass_slip
-                        ? row.pass_slip.status === "approved"
-                          ? "Approved"
-                          : "Pending"
-                        : "-"}
+                      {(() => {
+                        try {
+                          if (row.type === "TO") {
+                            const startDate = row.travel_order?.travel_start_date;
+                            const endDate = row.travel_order?.travel_end_date;
+                            
+                            if (!startDate || !endDate) return "N/A";
+                            
+                            const start = new Date(startDate);
+                            const end = new Date(endDate);
+                            const diffTime = Math.abs(end - start);
+                            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 to include both start and end days
+                            
+                            const startFormatted = start.toLocaleDateString("en-PH", {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            });
+                            const endFormatted = end.toLocaleDateString("en-PH", {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            });
+                            
+                            return `${startFormatted} - ${endFormatted} (${diffDays} day${diffDays !== 1 ? "s" : ""})`;
+                          } else if (row.type === "OB") {
+                            // For OB, check if there are start/end dates available
+                            const startDate = row.official_business?.itinerary_from;
+                            const endDate = row.official_business?.itinerary_to;
+                            
+                            if (!startDate || !endDate) {
+                              // If no itinerary dates, check date_of_business
+                              const businessDate = row.official_business?.date_of_business;
+                              if (businessDate) {
+                                const dateFormatted = new Date(businessDate).toLocaleDateString("en-PH", {
+                                  year: "numeric",
+                                  month: "long",
+                                  day: "numeric",
+                                });
+                                return `${dateFormatted} (1 day)`;
+                              }
+                              return "N/A";
+                            }
+                            
+                            const start = new Date(startDate);
+                            const end = new Date(endDate);
+                            const diffTime = Math.abs(end - start);
+                            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                            
+                            const startFormatted = start.toLocaleDateString("en-PH", {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            });
+                            const endFormatted = end.toLocaleDateString("en-PH", {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            });
+                            
+                            return `${startFormatted} - ${endFormatted} (${diffDays} day${diffDays !== 1 ? "s" : ""})`;
+                          } else if (row.type === "PS") {
+                            // For Pass Slip, check time_start and time_end or date
+                            const startTime = row.pass_slip?.time_start;
+                            const endTime = row.pass_slip?.time_end;
+                            const date = row.pass_slip?.date;
+                            
+                            if (startTime && endTime) {
+                              const start = new Date(startTime);
+                              const end = new Date(endTime);
+                              
+                              // If same day, calculate hours
+                              if (start.toDateString() === end.toDateString()) {
+                                const diffHours = Math.abs(end - start) / (1000 * 60 * 60);
+                                const dateFormatted = start.toLocaleDateString("en-PH", {
+                                  year: "numeric",
+                                  month: "long",
+                                  day: "numeric",
+                                });
+                                return `${dateFormatted} (${Math.round(diffHours * 10) / 10} hour${diffHours !== 1 ? "s" : ""})`;
+                              } else {
+                                const diffTime = Math.abs(end - start);
+                                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                                
+                                const startFormatted = start.toLocaleDateString("en-PH", {
+                                  year: "numeric",
+                                  month: "long",
+                                  day: "numeric",
+                                });
+                                const endFormatted = end.toLocaleDateString("en-PH", {
+                                  year: "numeric",
+                                  month: "long",
+                                  day: "numeric",
+                                });
+                                
+                                return `${startFormatted} - ${endFormatted} (${diffDays} day${diffDays !== 1 ? "s" : ""})`;
+                              }
+                            } else if (date) {
+                              const dateFormatted = new Date(date).toLocaleDateString("en-PH", {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                              });
+                              return `${dateFormatted} (1 day)`;
+                            }
+                            
+                            return "N/A";
+                          }
+                          
+                          return "N/A";
+                        } catch (e) {
+                          console.error("Error calculating duration:", e);
+                          return "N/A";
+                        }
+                      })()}
                     </TableCell>
 
                     {/* Position */}
@@ -3231,8 +4657,44 @@ export function ApprovingHistory({
                           justifyContent: "center",
                           gap: 1,
                           alignItems: "center",
+                          flexWrap: "wrap",
                         }}
                       >
+                        <IconButton
+                          size="small"
+                          color="primary"
+                          onClick={() => {
+                            let selectedId = null;
+                            let selectedData = null;
+
+                            if (row.type === "OB") {
+                              selectedId = row.official_business?.id;
+                              selectedData = {
+                                ...row.official_business,
+                                employees: row.employees || [],
+                              };
+                            } else if (row.type === "TO") {
+                              selectedId = row.travel_order?.id;
+                              selectedData = {
+                                ...row.travel_order,
+                                employees: row.employees || [],
+                              };
+                            } else if (row.type === "PS") {
+                              selectedId = row.pass_slip?.pass_slip_id;
+                              selectedData = {
+                                ...row.pass_slip,
+                                employees: row.employees || [],
+                              };
+                            }
+
+                            setSelectedTravelId(selectedId);
+                            setSelectedRowType(row.type);
+                            setSelectedTravelData(selectedData);
+                            setOpenInfo(true);
+                          }}
+                        >
+                          <InfoOutlinedIcon />
+                        </IconButton>
                         <Button
                           variant="contained"
                           color="primary"
@@ -3280,11 +4742,474 @@ export function ApprovingHistory({
                       </Box>
                     </TableCell>
                   </TableRow>
-                ));
+                  );
+                });
               })()}
+            </TableBody>
+          </Table>
+        )}
+      </TableContainer>
 
-              {/* Move dialog outside the table body so it's always available */}
-              {selectedRow && (
+      {/* Pagination controls */}
+      {(() => {
+        const filteredData = filteredDataWithDateRange.filter((row) => {
+          const status =
+            row.type === "OB" && row.official_business
+              ? row.official_business.status
+              : row.type === "TO" && row.travel_order
+              ? row.travel_order.status
+              : row.type === "PS" && row.pass_slip
+              ? row.pass_slip.status
+              : undefined;
+
+          // Filter for approved status (not declined)
+          if (status !== "approved" && status !== "Approved") return false;
+
+          return (
+            userRole === "admin" ||
+            userRole === "evaluator" ||
+            status === "approved" ||
+            status === "Approved"
+          );
+        });
+
+        const isShowAll = rowsPerPage === "all";
+        const itemsPerPage = isShowAll ? filteredData.length : Number(rowsPerPage);
+        const totalPages = isShowAll ? 1 : Math.ceil(filteredData.length / itemsPerPage);
+        const startIndex = isShowAll ? 0 : (currentPage - 1) * itemsPerPage;
+        const endIndex = isShowAll
+          ? filteredData.length
+          : Math.min(startIndex + itemsPerPage, filteredData.length);
+        const startEntry = filteredData.length === 0 ? 0 : startIndex + 1;
+        const endEntry = endIndex;
+
+        // Calculate page range to show (max 3 pages)
+        let startPage = 1;
+        let endPage = Math.min(3, totalPages);
+
+        if (currentPage > 2 && currentPage < totalPages - 1) {
+          startPage = currentPage - 1;
+          endPage = currentPage + 1;
+        } else if (currentPage >= totalPages - 1) {
+          startPage = Math.max(1, totalPages - 2);
+          endPage = totalPages;
+        }
+
+        const pageNumbers = [];
+        for (let i = startPage; i <= endPage; i++) {
+          pageNumbers.push(i);
+        }
+
+        return (
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              mt: 2,
+              mb: 2,
+              px: 2,
+            }}
+          >
+            <Typography variant="body2" color="text.secondary">
+              Showing {startEntry}-{endEntry} of {filteredData.length}
+            </Typography>
+
+            {!isShowAll && totalPages > 1 && (
+              <Box sx={{ display: "flex", gap: 1 }}>
+                <IconButton
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  size="small"
+                >
+                  <ChevronLeftIcon fontSize="small" />
+                </IconButton>
+
+                {pageNumbers.map((pageNum) => (
+                  <Button
+                    key={pageNum}
+                    variant={currentPage === pageNum ? "contained" : "text"}
+                    size="small"
+                    onClick={() => setCurrentPage(pageNum)}
+                    sx={{
+                      fontWeight: currentPage === pageNum ? 600 : 400,
+                      backgroundColor:
+                        currentPage === pageNum ? "primary.main" : "transparent",
+                      color:
+                        currentPage === pageNum
+                          ? "primary.contrastText"
+                          : "text.primary",
+                      "&:hover": {
+                        backgroundColor:
+                          currentPage === pageNum
+                            ? "primary.dark"
+                            : "action.hover",
+                      },
+                      minWidth: 32,
+                      height: 32,
+                    }}
+                  >
+                    {pageNum}
+                  </Button>
+                ))}
+
+                <IconButton
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  disabled={currentPage === totalPages || totalPages === 0}
+                  size="small"
+                >
+                  <ChevronRightIcon fontSize="small" />
+                </IconButton>
+              </Box>
+            )}
+          </Box>
+        );
+      })()}
+
+      {/* Info Modal Dialog */}
+      <Dialog
+        open={openInfo && !!selectedTravelData}
+        onClose={() => setOpenInfo(false)}
+        maxWidth="sm"
+        fullWidth
+        sx={{
+          "& .MuiPaper-root": {
+            borderRadius: "12px",
+            boxShadow: "0px 4px 16px rgba(0, 0, 0, 0.1)",
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            fontSize: "1.25rem",
+            fontWeight: 600,
+            padding: "16px 24px",
+            borderBottom: "1px solid #e0e0e0",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <span>Request Details</span>
+          <IconButton
+            onClick={() => setOpenInfo(false)}
+            sx={{ color: "text.secondary" }}
+          >
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </DialogTitle>
+
+        <DialogContent dividers sx={{ padding: "24px" }}>
+          {selectedTravelData ? (
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: "120px 1fr",
+                gap: "16px 8px",
+                alignItems: "center",
+              }}
+            >
+              {selectedRowType === "TO" && (
+                <>
+                  <DetailLabel>ID</DetailLabel>
+                  <DetailValue>
+                    {selectedTravelData.id}
+                  </DetailValue>
+
+                  <DetailLabel>Request</DetailLabel>
+                  <DetailValue>
+                    {selectedTravelData.re}
+                  </DetailValue>
+
+                  <DetailLabel>Date</DetailLabel>
+                  <DetailValue>
+                    {selectedTravelData.date
+                      ? new Date(
+                          selectedTravelData.date
+                        ).toLocaleDateString("en-PH", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        })
+                      : "N/A"}
+                  </DetailValue>
+
+                  <DetailLabel>Destination</DetailLabel>
+                  <DetailValue>
+                    {selectedTravelData.destination}
+                  </DetailValue>
+
+                  <DetailLabel>Travel From</DetailLabel>
+                  <DetailValue>
+                    {selectedTravelData.travel_from
+                      ? new Date(
+                          selectedTravelData.travel_from
+                        ).toLocaleDateString("en-PH", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        })
+                      : "N/A"}
+                  </DetailValue>
+
+                  <DetailLabel>Travel To</DetailLabel>
+                  <DetailValue>
+                    {selectedTravelData.travel_to
+                      ? new Date(
+                          selectedTravelData.travel_to
+                        ).toLocaleDateString("en-PH", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        })
+                      : "N/A"}
+                  </DetailValue>
+
+                  <DetailLabel>Purpose</DetailLabel>
+                  <DetailValue>
+                    {selectedTravelData.purpose}
+                  </DetailValue>
+
+                  <DetailLabel>Status</DetailLabel>
+                  <DetailValue>
+                    <StatusChip
+                      status={selectedTravelData.status}
+                    />
+                  </DetailValue>
+
+                  <DetailLabel>Remarks</DetailLabel>
+                  <DetailValue>
+                    {selectedTravelData.remarks || "None"}
+                  </DetailValue>
+
+                  {selectedTravelData.employees?.length >
+                    0 && (
+                      <>
+                        <DetailLabel
+                          sx={{ alignSelf: "start", pt: 1 }}
+                        >
+                          Employees
+                        </DetailLabel>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 1,
+                          }}
+                        >
+                          {selectedTravelData.employees.map(
+                            (emp, idx) => (
+                              <EmployeeBadge
+                                key={idx}
+                                name={`${emp.first_name} ${emp.last_name}`}
+                                position={emp.position_name}
+                              />
+                            )
+                          )}
+                        </Box>
+                      </>
+                    )}
+                </>
+              )}
+
+              {selectedRowType === "OB" && (
+                <>
+                  <DetailLabel>ID</DetailLabel>
+                  <DetailValue>
+                    {selectedTravelData.id}
+                  </DetailValue>
+
+                  <DetailLabel>Date</DetailLabel>
+                  <DetailValue>
+                    {selectedTravelData.date_of_business
+                      ? new Date(
+                          selectedTravelData.date_of_business
+                        ).toLocaleDateString("en-PH", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        })
+                      : "N/A"}
+                  </DetailValue>
+
+                  <DetailLabel>Purpose</DetailLabel>
+                  <DetailValue>
+                    {selectedTravelData.purpose}
+                  </DetailValue>
+
+                  <DetailLabel>Itinerary From</DetailLabel>
+                  <DetailValue>
+                    {selectedTravelData.itinerary_from
+                      ? new Date(
+                          selectedTravelData.itinerary_from
+                        ).toLocaleDateString("en-PH", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        })
+                      : "N/A"}
+                  </DetailValue>
+
+                  <DetailLabel>Destination</DetailLabel>
+                  <DetailValue>
+                    {selectedTravelData.travel_to || "N/A"}
+                  </DetailValue>
+
+                  <DetailLabel>Status</DetailLabel>
+                  <DetailValue>
+                    <StatusChip
+                      status={selectedTravelData.status}
+                    />
+                  </DetailValue>
+
+                  <DetailLabel>Remarks</DetailLabel>
+                  <DetailValue>
+                    {selectedTravelData.remarks || "None"}
+                  </DetailValue>
+
+                  {selectedTravelData.employees?.length >
+                    0 && (
+                      <>
+                        <DetailLabel
+                          sx={{ alignSelf: "start", pt: 1 }}
+                        >
+                          Employees
+                        </DetailLabel>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 1,
+                          }}
+                        >
+                          {selectedTravelData.employees.map(
+                            (emp, idx) => (
+                              <EmployeeBadge
+                                key={idx}
+                                name={`${emp.first_name} ${emp.last_name}`}
+                                position={emp.position_name}
+                              />
+                            )
+                          )}
+                        </Box>
+                      </>
+                    )}
+                </>
+              )}
+
+              {selectedRowType === "PS" && (
+                <>
+                  <DetailLabel>ID</DetailLabel>
+                  <DetailValue>
+                    {selectedTravelData.pass_slip_id}
+                  </DetailValue>
+
+                  <DetailLabel>Reason</DetailLabel>
+                  <DetailValue>
+                    {selectedTravelData.reason}
+                  </DetailValue>
+
+                  <DetailLabel>Date</DetailLabel>
+                  <DetailValue>
+                    {new Date(
+                      selectedTravelData.created_at
+                    ).toLocaleDateString("en-PH", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                  </DetailValue>
+
+                  <DetailLabel>Place to Visit</DetailLabel>
+                  <DetailValue>
+                    {selectedTravelData.place_to_visit || "N/A"}
+                  </DetailValue>
+
+                  <DetailLabel>Time Start</DetailLabel>
+                  <DetailValue>
+                    {selectedTravelData.time_start
+                      ? new Date(
+                          selectedTravelData.time_start
+                        ).toLocaleTimeString("en-PH", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
+                      : "N/A"}
+                  </DetailValue>
+
+                  <DetailLabel>Time End</DetailLabel>
+                  <DetailValue>
+                    {selectedTravelData.time_end
+                      ? new Date(
+                          selectedTravelData.time_end
+                        ).toLocaleTimeString("en-PH", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
+                      : "N/A"}
+                  </DetailValue>
+
+                  <DetailLabel>Status</DetailLabel>
+                  <DetailValue>
+                    <StatusChip
+                      status={selectedTravelData.status}
+                    />
+                  </DetailValue>
+
+                  {selectedTravelData.employees?.length >
+                    0 && (
+                      <>
+                        <DetailLabel
+                          sx={{ alignSelf: "start", pt: 1 }}
+                        >
+                          Employees
+                        </DetailLabel>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 1,
+                          }}
+                        >
+                          {selectedTravelData.employees.map(
+                            (emp, idx) => (
+                              <EmployeeBadge
+                                key={idx}
+                                name={`${emp.first_name} ${emp.last_name}`}
+                                position={emp.position_name}
+                              />
+                            )
+                          )}
+                        </Box>
+                      </>
+                    )}
+                </>
+              )}
+            </Box>
+          ) : (
+            <Typography>No data available</Typography>
+          )}
+        </DialogContent>
+
+        <DialogActions sx={{ padding: "16px 24px" }}>
+          <Button
+            variant="contained"
+            onClick={() => setOpenInfo(false)}
+            sx={{
+              borderRadius: "8px",
+              textTransform: "none",
+              padding: "8px 16px",
+              fontWeight: 500,
+              boxShadow: "none",
+            }}
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Move dialog outside the table body so it's always available */}
+      {selectedRow && (
                 <BootstrapDialog
                   onClose={handleClose}
                   aria-labelledby="customized-dialog-title"
@@ -3341,10 +5266,450 @@ export function ApprovingHistory({
                   </DialogContent>
                 </BootstrapDialog>
               )}
+    </Container>
+  );
+}
+
+export function ApprovingDeclined({
+  data,
+  isLoading,
+  userRole,
+  Headposition,
+  signatureUrl,
+}) {
+  const [openInfo, setOpenInfo] = useState(false);
+  const [selectedTravelData, setSelectedTravelData] = useState(null);
+  const [selectedRowType, setSelectedRowType] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [typeFilterAnchor, setTypeFilterAnchor] = useState(null);
+  const [selectedTypeFilter, setSelectedTypeFilter] = useState("All"); // All, TO, OB, PS
+
+  const DetailLabel = ({ children, ...props }) => (
+    <Typography variant="body2" color="text.secondary" fontWeight={500} {...props}>
+      {children}
+    </Typography>
+  );
+
+  const DetailValue = ({ children }) => (
+    <Typography variant="body1" component="div" fontWeight={400}>
+      {children}
+    </Typography>
+  );
+
+  const StatusChip = ({ status }) => (
+    <Chip
+      label={status}
+      size="small"
+      sx={{
+        fontWeight: 500,
+        backgroundColor: status === "declined" || status === "Declined" ? "#ffecec" : "#fff8e6",
+        color: status === "declined" || status === "Declined" ? "#d32f2f" : "#ff9800",
+      }}
+    />
+  );
+
+  const EmployeeBadge = ({ name, position }) => (
+    <Box sx={{ display: "flex", alignItems: "center", gap: 1, padding: "6px 8px", backgroundColor: "#f5f5f5", borderRadius: "8px" }}>
+      <Typography variant="body2" fontWeight={500}>{name}</Typography>
+      {position && (
+        <>
+          <Typography variant="body2" color="text.secondary">•</Typography>
+          <Typography variant="body2" color="text.secondary">{position}</Typography>
+        </>
+      )}
+    </Box>
+  );
+
+  const filteredData = useMemo(() => {
+    return data.filter((row) => {
+      // Type filter
+      if (selectedTypeFilter !== "All" && row.type !== selectedTypeFilter) {
+        return false;
+      }
+
+      const status =
+        row.type === "OB" && row.official_business
+          ? row.official_business.status
+          : row.type === "TO" && row.travel_order
+          ? row.travel_order.status
+          : row.type === "PS" && row.pass_slip
+          ? row.pass_slip.status
+          : undefined;
+      return status === "declined";
+    });
+  }, [data, selectedTypeFilter]);
+
+  const isShowAll = rowsPerPage === "all";
+  const itemsPerPage = isShowAll ? filteredData.length : Number(rowsPerPage);
+  const totalPages = isShowAll ? 1 : Math.ceil(filteredData.length / itemsPerPage);
+  const startIndex = isShowAll ? 0 : (currentPage - 1) * itemsPerPage;
+  const endIndex = isShowAll ? filteredData.length : Math.min(startIndex + itemsPerPage, filteredData.length);
+  const paginatedData = filteredData.slice(startIndex, endIndex);
+  const startEntry = filteredData.length === 0 ? 0 : startIndex + 1;
+  const endEntry = endIndex;
+
+  return (
+    <Container sx={{ overflowY: "hidden", overflowX: { xs: "auto", sm: "hidden" } }}>
+      <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1, mb: 1 }}>
+        <Button
+          variant="outlined"
+          color="primary"
+          endIcon={<ArrowDropDown />}
+          onClick={(e) => setTypeFilterAnchor(e.currentTarget)}
+        >
+          Filter: {selectedTypeFilter}
+        </Button>
+        <Menu
+          anchorEl={typeFilterAnchor}
+          open={Boolean(typeFilterAnchor)}
+          onClose={() => setTypeFilterAnchor(null)}
+        >
+          <MenuItem onClick={() => { setSelectedTypeFilter("All"); setTypeFilterAnchor(null); }}>
+            All
+          </MenuItem>
+          <MenuItem onClick={() => { setSelectedTypeFilter("TO"); setTypeFilterAnchor(null); }}>
+            Travel Orders
+          </MenuItem>
+          <MenuItem onClick={() => { setSelectedTypeFilter("OB"); setTypeFilterAnchor(null); }}>
+            Official Business
+          </MenuItem>
+          <MenuItem onClick={() => { setSelectedTypeFilter("PS"); setTypeFilterAnchor(null); }}>
+            Pass Slips
+          </MenuItem>
+        </Menu>
+      </Box>
+      <TableContainer component={Paper} sx={{ border: "1px solid #ccc", borderRadius: "8px", overflowY: "hidden", overflowX: { xs: "auto", sm: "hidden" } }}>
+        {isLoading ? (
+          <Box sx={{ textAlign: "center", padding: "20px" }}>Loading...</Box>
+        ) : filteredData.length === 0 ? (
+          <Box sx={{ textAlign: "center", padding: "20px" }}>No declined requests</Box>
+        ) : (
+          <Table>
+            <TableHead>
+              <TableRow>
+                {["Request Date", "Full Name", "TO/OB", "Place", "Duration", "Position", "Remarks", "Actions"].map((header) => (
+                  <TableCell key={header} sx={{ fontWeight: "bold", border: "1px solid #ccc", textAlign: "center" }}>
+                    {header}
+                  </TableCell>
+                ))}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {paginatedData.map((row, index) => (
+                <TableRow key={index}>
+                  <TableCell sx={{ border: "1px solid #ccc", textAlign: "center" }}>
+                    {(() => {
+                      const requestDate = row.type === "OB" ? row.official_business?.date : row.type === "TO" ? row.travel_order?.date : row.type === "PS" ? row.pass_slip?.date || row.pass_slip?.created_at : null;
+                      if (!requestDate) return "N/A";
+                      try {
+                        return new Date(requestDate).toLocaleDateString("en-PH", { year: "numeric", month: "short", day: "numeric" });
+                      } catch (e) {
+                        return "N/A";
+                      }
+                    })()}
+                  </TableCell>
+                  <TableCell sx={{ 
+                    border: "1px solid #ccc", 
+                    textAlign: "center",
+                    maxWidth: "200px",
+                    width: "200px",
+                  }}>
+                    <Box
+                      sx={{
+                        textAlign: "left",
+                      }}
+                    >
+                      <Typography variant="body2">
+                        {row.employees && row.employees.length > 0 ? (
+                          <>
+                            <div>
+                              {row.employees[0].last_name}, {row.employees[0].first_name}{" "}
+                              {row.employees[0].middle_name && `${row.employees[0].middle_name[0]}.`}
+                            </div>
+                            {row.employees.length > 1 && (
+                              <div style={{ color: "#666", fontSize: "0.875rem" }}>
+                                and {row.employees.length - 1} more
+                              </div>
+                            )}
+                          </>
+                        ) : "N/A"}
+                      </Typography>
+                    </Box>
+                  </TableCell>
+                  <TableCell sx={{ border: "1px solid #ccc", textAlign: "center" }}>
+                    {row.type === "OB" ? row.official_business?.data_from : row.type === "TO" ? row.travel_order?.data_from : row.type === "PS" ? "Pass Slip" : "-"}
+                  </TableCell>
+                  <TableCell sx={{ border: "1px solid #ccc", textAlign: "center" }}>
+                    {row.type === "OB" ? row.official_business?.travel_to ?? "N/A" : row.type === "TO" ? row.travel_order?.destination ?? "N/A" : row.type === "PS" ? row.pass_slip?.place_to_visit ?? "N/A" : "-"}
+                  </TableCell>
+                  <TableCell sx={{ border: "1px solid #ccc", textAlign: "center" }}>
+                    {(() => {
+                      try {
+                        if (row.type === "TO") {
+                          const startDate = row.travel_order?.travel_start_date;
+                          const endDate = row.travel_order?.travel_end_date;
+                          if (!startDate || !endDate) return "N/A";
+                          const start = new Date(startDate);
+                          const end = new Date(endDate);
+                          const diffTime = Math.abs(end - start);
+                          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 to include both start and end days
+                          
+                          const startFormatted = start.toLocaleDateString("en-PH", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          });
+                          const endFormatted = end.toLocaleDateString("en-PH", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          });
+                          
+                          return `${startFormatted} - ${endFormatted} (${diffDays} day${diffDays !== 1 ? "s" : ""})`;
+                        } else if (row.type === "OB") {
+                          const startDate = row.official_business?.itinerary_from;
+                          const endDate = row.official_business?.itinerary_to;
+                          if (!startDate || !endDate) {
+                            const businessDate = row.official_business?.date_of_business;
+                            if (businessDate) {
+                              const dateFormatted = new Date(businessDate).toLocaleDateString("en-PH", {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                              });
+                              return `${dateFormatted} (1 day)`;
+                            }
+                            return "N/A";
+                          }
+                          const start = new Date(startDate);
+                          const end = new Date(endDate);
+                          const diffTime = Math.abs(end - start);
+                          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                          
+                          const startFormatted = start.toLocaleDateString("en-PH", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          });
+                          const endFormatted = end.toLocaleDateString("en-PH", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          });
+                          
+                          return `${startFormatted} - ${endFormatted} (${diffDays} day${diffDays !== 1 ? "s" : ""})`;
+                        } else if (row.type === "PS") {
+                          const startTime = row.pass_slip?.time_start;
+                          const endTime = row.pass_slip?.time_end;
+                          const date = row.pass_slip?.date;
+                          
+                          if (startTime && endTime) {
+                            const start = new Date(startTime);
+                            const end = new Date(endTime);
+                            if (start.toDateString() === end.toDateString()) {
+                              const diffHours = Math.abs(end - start) / (1000 * 60 * 60);
+                              const dateFormatted = start.toLocaleDateString("en-PH", {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                              });
+                              return `${dateFormatted} (${Math.round(diffHours * 10) / 10} hour${diffHours !== 1 ? "s" : ""})`;
+                            } else {
+                              const diffTime = Math.abs(end - start);
+                              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                              
+                              const startFormatted = start.toLocaleDateString("en-PH", {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                              });
+                              const endFormatted = end.toLocaleDateString("en-PH", {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                              });
+                              
+                              return `${startFormatted} - ${endFormatted} (${diffDays} day${diffDays !== 1 ? "s" : ""})`;
+                            }
+                          } else if (date) {
+                            const dateFormatted = new Date(date).toLocaleDateString("en-PH", {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            });
+                            return `${dateFormatted} (1 day)`;
+                          }
+                          return "N/A";
+                        }
+                        return "N/A";
+                      } catch (e) {
+                        console.error("Error calculating duration:", e);
+                        return "N/A";
+                      }
+                    })()}
+                  </TableCell>
+                  <TableCell sx={{ border: "1px solid #ccc", textAlign: "center" }}>
+                    <Box sx={{ maxHeight: "60px", overflowY: "auto" }}>
+                      {row.employees?.map((emp, i) => (
+                        <div key={i}>{emp.position_name}</div>
+                      ))}
+                    </Box>
+                  </TableCell>
+                  <TableCell sx={{ border: "1px solid #ccc", textAlign: "center", maxWidth: "300px" }}>
+                    <Box sx={{ maxHeight: "100px", overflowY: "auto", padding: "4px" }}>
+                      <Typography variant="body2" color="text.secondary">
+                        {(() => {
+                          const remarks = 
+                            row.type === "OB" 
+                              ? row.official_business?.remarks
+                              : row.type === "TO" 
+                              ? row.travel_order?.remarks
+                              : row.type === "PS"
+                              ? row.pass_slip?.remarks
+                              : null;
+                          return remarks || "No remarks provided";
+                        })()}
+                      </Typography>
+                    </Box>
+                  </TableCell>
+                  <TableCell sx={{ border: "1px solid #ccc", textAlign: "center" }}>
+                    <IconButton
+                      size="small"
+                      color="primary"
+                      onClick={() => {
+                        let selectedData = null;
+                        if (row.type === "OB") {
+                          selectedData = { ...row.official_business, employees: row.employees || [] };
+                        } else if (row.type === "TO") {
+                          selectedData = { ...row.travel_order, employees: row.employees || [] };
+                        } else if (row.type === "PS") {
+                          selectedData = { ...row.pass_slip, employees: row.employees || [] };
+                        }
+                        setSelectedRowType(row.type);
+                        setSelectedTravelData(selectedData);
+                        setOpenInfo(true);
+                      }}
+                    >
+                      <InfoOutlinedIcon />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         )}
       </TableContainer>
+
+      {filteredData.length > 0 && (
+        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: 2, mb: 2 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Typography variant="body2">Show:</Typography>
+            <select
+              value={rowsPerPage}
+              onChange={(e) => {
+                const newRowsPerPage = e.target.value === "all" ? "all" : Number(e.target.value);
+                setRowsPerPage(newRowsPerPage);
+                setCurrentPage(1);
+              }}
+              style={{ padding: "4px 8px", borderRadius: "4px", border: "1px solid #ccc" }}
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value="all">All</option>
+            </select>
+            <Typography variant="body2">entries</Typography>
+          </Box>
+          <Typography variant="body2" color="text.secondary">
+            Showing {startEntry}-{endEntry} of {filteredData.length}
+          </Typography>
+          {!isShowAll && totalPages > 1 && (
+            <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+              <IconButton onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1}>
+                <ChevronLeftIcon />
+              </IconButton>
+              {Array.from({ length: Math.min(3, totalPages) }, (_, i) => {
+                const page = currentPage <= 2 ? i + 1 : currentPage >= totalPages - 1 ? totalPages - 2 + i : currentPage - 1 + i;
+                if (page > totalPages) return null;
+                return (
+                  <Button key={page} variant={currentPage === page ? "contained" : "outlined"} onClick={() => setCurrentPage(page)} sx={{ minWidth: "32px", padding: "4px 8px" }}>
+                    {page}
+                  </Button>
+                );
+              })}
+              <IconButton onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
+                <ChevronRightIcon />
+              </IconButton>
+            </Box>
+          )}
+        </Box>
+      )}
+
+      {openInfo && selectedTravelData && (
+        <Dialog open={openInfo} onClose={() => setOpenInfo(false)} maxWidth="md" fullWidth>
+          <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            Request Details
+            <IconButton onClick={() => setOpenInfo(false)}>
+              <CloseIcon />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
+              {selectedRowType === "TO" && selectedTravelData && (
+                <>
+                  <Box><DetailLabel>Status:</DetailLabel><StatusChip status={selectedTravelData.status || "N/A"} /></Box>
+                  <Box><DetailLabel>Destination:</DetailLabel><DetailValue>{selectedTravelData.destination || "N/A"}</DetailValue></Box>
+                  <Box><DetailLabel>Travel Start:</DetailLabel><DetailValue>{selectedTravelData.travel_start_date ? new Date(selectedTravelData.travel_start_date).toLocaleDateString() : "N/A"}</DetailValue></Box>
+                  <Box><DetailLabel>Travel End:</DetailLabel><DetailValue>{selectedTravelData.travel_end_date ? new Date(selectedTravelData.travel_end_date).toLocaleDateString() : "N/A"}</DetailValue></Box>
+                  {selectedTravelData.remarks && <Box><DetailLabel>Remarks:</DetailLabel><DetailValue>{selectedTravelData.remarks}</DetailValue></Box>}
+                  {selectedTravelData.employees && selectedTravelData.employees.length > 0 && (
+                    <Box>
+                      <DetailLabel>Employees:</DetailLabel>
+                      {selectedTravelData.employees.map((emp, i) => (
+                        <EmployeeBadge key={i} name={`${emp.last_name}, ${emp.first_name}`} position={emp.position_name} />
+                      ))}
+                    </Box>
+                  )}
+                </>
+              )}
+              {selectedRowType === "OB" && selectedTravelData && (
+                <>
+                  <Box><DetailLabel>Status:</DetailLabel><StatusChip status={selectedTravelData.status || "N/A"} /></Box>
+                  <Box><DetailLabel>Travel To:</DetailLabel><DetailValue>{selectedTravelData.travel_to || "N/A"}</DetailValue></Box>
+                  <Box><DetailLabel>Date of Business:</DetailLabel><DetailValue>{selectedTravelData.date_of_business ? new Date(selectedTravelData.date_of_business).toLocaleDateString() : "N/A"}</DetailValue></Box>
+                  {selectedTravelData.remarks && <Box><DetailLabel>Remarks:</DetailLabel><DetailValue>{selectedTravelData.remarks}</DetailValue></Box>}
+                  {selectedTravelData.employees && selectedTravelData.employees.length > 0 && (
+                    <Box>
+                      <DetailLabel>Employees:</DetailLabel>
+                      {selectedTravelData.employees.map((emp, i) => (
+                        <EmployeeBadge key={i} name={`${emp.last_name}, ${emp.first_name}`} position={emp.position_name} />
+                      ))}
+                    </Box>
+                  )}
+                </>
+              )}
+              {selectedRowType === "PS" && selectedTravelData && (
+                <>
+                  <Box><DetailLabel>Status:</DetailLabel><StatusChip status={selectedTravelData.status || "N/A"} /></Box>
+                  <Box><DetailLabel>Place to Visit:</DetailLabel><DetailValue>{selectedTravelData.place_to_visit || "N/A"}</DetailValue></Box>
+                  <Box><DetailLabel>Time Start:</DetailLabel><DetailValue>{selectedTravelData.time_start ? new Date(selectedTravelData.time_start).toLocaleString() : "N/A"}</DetailValue></Box>
+                  <Box><DetailLabel>Time End:</DetailLabel><DetailValue>{selectedTravelData.time_end ? new Date(selectedTravelData.time_end).toLocaleString() : "N/A"}</DetailValue></Box>
+                  {selectedTravelData.remarks && <Box><DetailLabel>Remarks:</DetailLabel><DetailValue>{selectedTravelData.remarks}</DetailValue></Box>}
+                  {selectedTravelData.employees && selectedTravelData.employees.length > 0 && (
+                    <Box>
+                      <DetailLabel>Employees:</DetailLabel>
+                      {selectedTravelData.employees.map((emp, i) => (
+                        <EmployeeBadge key={i} name={`${emp.last_name}, ${emp.first_name}`} position={emp.position_name} />
+                      ))}
+                    </Box>
+                  )}
+                </>
+              )}
+            </Box>
+          </DialogContent>
+        </Dialog>
+      )}
     </Container>
   );
 }
@@ -3628,8 +5993,8 @@ export function ApprovingReports({ data, userRole }) {
       fixed
       sx={{
         fontSize: "10px",
-        maxHeight: "900px",
-        overflowY: "auto",
+        overflowY: "hidden",
+        overflowX: { xs: "auto", sm: "hidden" },
         position: "relative",
       }}
     >
@@ -3825,7 +6190,28 @@ export function ApprovingReports({ data, userRole }) {
       <TableContainer
         component={Paper}
         ref={reportRef}
-        sx={{ border: "1px solid #ccc", borderRadius: "8px", p: 2 }}
+        sx={{ 
+          border: "1px solid #ccc", 
+          borderRadius: "8px", 
+          p: 2,
+          overflowY: "hidden",
+          overflowX: { xs: "auto", sm: "hidden" },
+          WebkitOverflowScrolling: "touch", // Smooth scrolling on iOS
+          "&::-webkit-scrollbar": {
+            height: "8px",
+          },
+          "&::-webkit-scrollbar-track": {
+            backgroundColor: "#f1f1f1",
+            borderRadius: "4px",
+          },
+          "&::-webkit-scrollbar-thumb": {
+            backgroundColor: "#888",
+            borderRadius: "4px",
+            "&:hover": {
+              backgroundColor: "#555",
+            },
+          },
+        }}
       >
         <Table sx={{ minWidth: 650, borderCollapse: "collapse" }}>
           <TableHead sx={{ backgroundColor: "#f0f0f0" }}>
@@ -3884,13 +6270,20 @@ export function ApprovingReports({ data, userRole }) {
                     <TableCell
                       sx={{ border: "1px solid #ccc", textAlign: "center" }}
                     >
-                      <Box sx={{ maxHeight: "100px", overflowY: "auto" }}>
-                        {row.employees?.slice(0, 30).map((emp, i) => (
-                          <div key={i}>
-                            {emp.last_name}, {emp.first_name}{" "}
-                            {emp.middle_name && `${emp.middle_name[0]}.`}
-                          </div>
-                        ))}
+                      <Box>
+                        {row.employees && row.employees.length > 0 ? (
+                          <>
+                            <div>
+                              {row.employees[0].last_name}, {row.employees[0].first_name}{" "}
+                              {row.employees[0].middle_name && `${row.employees[0].middle_name[0]}.`}
+                            </div>
+                            {row.employees.length > 1 && (
+                              <div style={{ color: "#666", fontSize: "0.875rem" }}>
+                                and {row.employees.length - 1} more
+                              </div>
+                            )}
+                          </>
+                        ) : "N/A"}
                       </Box>
                     </TableCell>
                     <TableCell
@@ -4333,7 +6726,7 @@ const BootstrapDialog = styled(Dialog)(({ theme }) => ({
   },
 }));
 
-export function ApprovingEmployee({ refreshHistoryLogs }) {
+export function ApprovingEmployee({ refreshHistoryLogs, viewType = "organizational-chart" }) {
   const navigate = useNavigate();
   const [menuAnchor, setMenuAnchor] = React.useState(null);
   const [selectedEmployee, setSelectedEmployee] = React.useState(null);
@@ -4341,6 +6734,9 @@ export function ApprovingEmployee({ refreshHistoryLogs }) {
   const [openAdd, setOpenAdd] = React.useState(false);
   const [employees, setEmployees] = React.useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [positionFilter, setPositionFilter] = useState("All"); // Filter by position
+  const [currentPage, setCurrentPage] = useState(1); // Pagination state
+  const [rowsPerPage, setRowsPerPage] = useState(10); // 10 items per page
   const [editingEmployeeId, setEditingEmployeeId] = useState(null);
   const [editingId, setEditingId] = useState(null); // ID of the row being edited
   const [editedName, setEditedName] = useState(""); // The name being edited
@@ -4348,6 +6744,21 @@ export function ApprovingEmployee({ refreshHistoryLogs }) {
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
+    setCurrentPage(1); // Reset to first page when search changes
+  };
+
+  const handlePositionFilterChange = (e) => {
+    setPositionFilter(e.target.value);
+    setCurrentPage(1); // Reset to first page when filter changes
+  };
+
+  const handleChangePage = (event, newPage) => {
+    setCurrentPage(newPage + 1); // Convert from 0-based to 1-based
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setCurrentPage(1); // Reset to first page
   };
 
   const filteredEmployees = Array.isArray(employees)
@@ -4357,11 +6768,17 @@ export function ApprovingEmployee({ refreshHistoryLogs }) {
         const positionName = emp.position_name?.toLowerCase() || "";
         const term = searchTerm.toLowerCase();
 
-        return (
+        // Search filter
+        const matchesSearch =
           firstName.includes(term) ||
           lastName.includes(term) ||
-          positionName.includes(term)
-        );
+          positionName.includes(term);
+
+        // Position filter
+        const matchesPosition =
+          positionFilter === "All" || emp.position_name === positionFilter;
+
+        return matchesSearch && matchesPosition;
       })
     : [];
 
@@ -4719,8 +7136,8 @@ export function ApprovingEmployee({ refreshHistoryLogs }) {
       }
     };
 
-    if (openAdd) loadEmployees();
-  }, [openAdd]);
+    if (viewType === "manage-employee") loadEmployees();
+  }, [viewType]);
 
   // Open menu for a specific employee
   const handleMenuOpen = (event, employee) => {
@@ -4831,6 +7248,17 @@ export function ApprovingEmployee({ refreshHistoryLogs }) {
       setImageError("");
       handleClose();
 
+      // Refresh employee list
+      try {
+        const data = await fetchEmployees();
+        const employeeList = Array.isArray(data?.employees)
+          ? data.employees
+          : [];
+        setEmployees(employeeList);
+      } catch (error) {
+        console.error("Failed to refresh employees:", error);
+      }
+
       // ✅ Call the function to refresh history logs
       if (typeof refreshHistoryLogs === "function") {
         await refreshHistoryLogs();
@@ -4871,17 +7299,19 @@ export function ApprovingEmployee({ refreshHistoryLogs }) {
     loadPositions();
   }, []);
 
+  const [positionNameInput, setPositionNameInput] = useState(""); // Separate state for position management modal
+
   const handleSubmitPosition = async () => {
-    if (!position.trim()) return; // Prevent empty input
+    if (!positionNameInput.trim()) return; // Prevent empty input
 
     try {
-      const newPosition = await storePosition(position); // API call with toast inside
+      const newPosition = await storePosition(positionNameInput); // API call with toast inside
 
       // After adding a new position, refetch the positions from the server
       const updatedPositions = await fetchPositions(); // Re-fetch positions
       setPositions(updatedPositions); // Update state with the fresh data
 
-      setPosition(""); // Clear input
+      setPositionNameInput(""); // Clear input
 
       // Refresh history logs if the function exists
       if (typeof refreshHistoryLogs === "function") {
@@ -4961,7 +7391,7 @@ export function ApprovingEmployee({ refreshHistoryLogs }) {
     hostname.startsWith("192.168.") ||
     hostname.startsWith("10.")
       ? `http://${hostname}:8000/api` // Development or LAN
-      : `${window.location.origin}/api`; // Production (same origin)
+      : `https://api.dolexcdo.online/api`; // Production
 
   // const handleEdit = (emp) => {
   //   setFirstName(emp.first_name);
@@ -5040,9 +7470,8 @@ export function ApprovingEmployee({ refreshHistoryLogs }) {
       sx={{
         p: 3,
         textAlign: "center",
-        maxHeight: "calc(100vh - 200px)",
-        overflow: "auto",
         paddingBottom: 3,
+        overflow: "visible", // Remove redundant scrollbar
       }}
     >
       <Card
@@ -5055,436 +7484,275 @@ export function ApprovingEmployee({ refreshHistoryLogs }) {
         }}
       >
         {/* 02/14/25 | Title of the organizational strucuture */}
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: { xs: "column", sm: "row" },
-            justifyContent: "space-between",
-            alignItems: "center",
-            mb: 2,
-            gap: 2,
-          }}
-        >
-          <Box sx={{ flex: 1 }} />
+        {viewType === "organizational-chart" ? (
           <Typography
             variant="h6"
             fontWeight="bold"
-            sx={{ textAlign: { xs: "center", sm: "left" } }}
+            sx={{ textAlign: "center", mb: 2 }}
           >
             Cagayan De Oro Provincial Field Office
             <br />
             <Box sx={{ textAlign: "center" }}>ORGANIZATIONAL STRUCTURE</Box>
           </Typography>
-
+        ) : (
           <Box
             sx={{
-              flex: 1,
               display: "flex",
-              justifyContent: { xs: "center", sm: "flex-end" },
-              gap: 2, // adds spacing between the buttons
-              flexWrap: "wrap", // optional: ensures buttons don’t overflow on small screens
+              flexDirection: { xs: "column", sm: "row" },
+              justifyContent: "space-between",
+              alignItems: "center",
+              mb: 2,
+              gap: 2,
             }}
           >
-            <Button
-              variant="contained"
-              startIcon={<Add />}
-              onClick={handleClickOpen}
+            <Box sx={{ flex: 1 }} />
+            <Typography
+              variant="h6"
+              fontWeight="bold"
+              sx={{ textAlign: { xs: "center", sm: "left" } }}
             >
               Manage Employees
-            </Button>
-            <Button
-              variant="contained"
-              startIcon={<Add />}
-              onClick={handleOpenPositionModal}
-            >
-              Manage Positions
-            </Button>
-          </Box>
-        </Box>
+            </Typography>
 
-        {/* Responsive Modal */}
-        {/* <Divider sx={{ my: 3 }} /> */}
-        <BootstrapDialog
-          onClose={handleClose}
-          aria-labelledby="customized-dialog-title"
-          open={openAdd}
-          sx={{ "& .MuiDialog-paper": { width: "95vw", maxWidth: 1000 } }}
-        >
-          <DialogTitle
-            sx={{
-              m: 0,
-              p: { xs: 1.5, sm: 2 },
-              fontSize: { xs: "1rem", sm: "1.25rem" },
-            }}
-            id="customized-dialog-title"
-          >
-            Add New Employee
-          </DialogTitle>
-          <IconButton
-            aria-label="close"
-            onClick={handleClose}
-            sx={{
-              position: "absolute",
-              right: 8,
-              top: 8,
-              color: (theme) => theme.palette.grey[500],
-            }}
-          >
-            <CloseIcon />
-          </IconButton>
-
-          <DialogContent
-            dividers
-            sx={{ maxHeight: "75vh", overflowY: "auto", p: { xs: 2, sm: 3 } }}
-          >
-            <Card
+            <Box
               sx={{
-                p: { xs: 2, sm: 4 },
-                borderRadius: 3,
-                backgroundColor: "#ffffff",
+                flex: 1,
+                display: "flex",
+                justifyContent: { xs: "center", sm: "flex-end" },
+                gap: 2,
+                flexWrap: "wrap",
               }}
             >
-              {/* Input Fields */}
-              <Box
-                display="flex"
-                flexDirection={{ xs: "column", sm: "row" }}
-                gap={2}
+              <Button
+                variant="contained"
+                startIcon={<PersonAdd />}
+                onClick={handleClickOpen}
               >
-                <TextField
-                  label="First Name"
-                  fullWidth
-                  variant="outlined"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  required
-                  sx={{ fontSize: { xs: "0.875rem", sm: "1rem" } }}
-                />
-                <TextField
-                  label="Last Name"
-                  fullWidth
-                  variant="outlined"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  required
-                  sx={{ fontSize: { xs: "0.875rem", sm: "1rem" } }}
-                />
-              </Box>
-
-              <Box
-                display="flex"
-                flexDirection={{ xs: "column", sm: "row" }}
-                gap={2}
-                mt={1}
+                Add Employee
+              </Button>
+              <Button
+                variant="contained"
+                startIcon={<Add />}
+                onClick={handleOpenPositionModal}
               >
+                Manage Positions
+              </Button>
+            </Box>
+          </Box>
+        )}
+
+        {/* Employee Table - Display directly in manage-employee view */}
+        {viewType === "manage-employee" && (
+          <Box mt={4}>
+            <Box
+              display="flex"
+              justifyContent="space-between"
+              alignItems="center"
+              flexWrap="wrap"
+              gap={2}
+              mb={2}
+            >
+              <Typography variant="h6" gutterBottom>
+                All Employees
+              </Typography>
+              <Box display="flex" gap={2} alignItems="center" flexWrap="wrap">
+                <FormControl variant="outlined" size="small" sx={{ minWidth: 180 }}>
+                  <InputLabel>Filter by Position</InputLabel>
+                  <Select
+                    value={positionFilter}
+                    onChange={handlePositionFilterChange}
+                    label="Filter by Position"
+                  >
+                    <MenuItem value="All">All Positions</MenuItem>
+                    {positions
+                      .filter((pos) => 
+                        !["Sr LEO", "LEO I", "LEO II", "LEO III"].includes(pos.name)
+                      )
+                      .map((pos) => (
+                        <MenuItem key={pos.id} value={pos.name}>
+                          {pos.name}
+                        </MenuItem>
+                      ))}
+                  </Select>
+                </FormControl>
                 <TextField
-                  label="M.I."
-                  fullWidth
+                  label="Search"
                   variant="outlined"
-                  value={middleInitial}
-                  onChange={(e) => setMiddleInitial(e.target.value)}
-                  required
-                />
-                <TextField
-                  label="Suffix"
-                  fullWidth
-                  variant="outlined"
-                  value={suffix}
-                  onChange={(e) => setSuffix(e.target.value)}
+                  size="small"
+                  value={searchTerm}
+                  onChange={handleSearchChange}
+                  sx={{ width: 200 }}
                 />
               </Box>
+            </Box>
 
-              <FormControl fullWidth variant="outlined" sx={{ mt: 1 }}>
-                <InputLabel>Position</InputLabel>
-                <Select
-                  label="Position"
-                  value={position}
-                  onChange={(e) => {
-                    const selected = positions.find(
-                      (pos) => pos.id === e.target.value
-                    );
-                    setPosition(e.target.value);
-                    setPositionName(selected?.name || "");
-                  }}
-                  required
-                  sx={{ fontSize: { xs: "0.875rem", sm: "1rem" } }}
-                >
-                  {loading ? (
-                    <MenuItem disabled>
-                      <CircularProgress size={24} />
-                    </MenuItem>
-                  ) : (
-                    positions.map((pos) => (
-                      <MenuItem key={pos.id} value={pos.id}>
-                        {pos.name}
-                      </MenuItem>
-                    ))
-                  )}
-                </Select>
-              </FormControl>
+            <TableContainer component={Paper}>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>No.</TableCell>
+                    <TableCell>First Name</TableCell>
+                    <TableCell>Last Name</TableCell>
+                    <TableCell>Position</TableCell>
+                    <TableCell align="center">Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {(() => {
+                    const visibleEmployees =
+                      filteredEmployees?.filter(
+                        (emp) =>
+                          ![
+                            "Sr LEO",
+                            "LEO I",
+                            "LEO II",
+                            "LEO III",
+                          ].includes(emp.position_name)
+                      ) || [];
 
-              {/* Image Upload */}
-              <Box
-                display="flex"
-                justifyContent="center"
-                alignItems="center"
-                flexDirection="column"
-                mt={2}
-                p={2}
-                border="2px dashed"
-                borderColor={imageError ? "error.main" : "#aaa"}
-                borderRadius={2}
-                sx={{
-                  cursor: "pointer",
-                  textAlign: "center",
-                  position: "relative",
-                }}
-                onClick={() => document.getElementById("imageInput").click()}
-              >
-                {imagePreview ? (
-                  <>
-                    <img
-                      src={imagePreview}
-                      alt="Preview"
-                      style={{
-                        width: "100px",
-                        height: "100px",
-                        borderRadius: "10px",
-                      }}
-                    />
-                    <IconButton
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removeImage();
-                      }}
-                      sx={{
-                        position: "absolute",
-                        top: 5,
-                        right: 5,
-                        backgroundColor: "white",
-                      }}
-                    >
-                      <DeleteIcon color="error" />
-                    </IconButton>
-                  </>
-                ) : (
-                  <>
-                    <CloudUploadIcon
-                      fontSize="large"
-                      color={imageError ? "error" : "inherit"}
-                    />
-                    <Typography
-                      variant="body2"
-                      sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}
-                      color={imageError ? "error" : "textPrimary"}
-                    >
-                      Browse File to upload
-                    </Typography>
-                  </>
-                )}
-                <input
-                  type="file"
-                  id="imageInput"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  style={{ display: "none" }}
-                />
-              </Box>
+                    // Pagination logic
+                    const totalPages = Math.ceil(visibleEmployees.length / rowsPerPage);
+                    const startIndex = (currentPage - 1) * rowsPerPage;
+                    const endIndex = startIndex + rowsPerPage;
+                    const paginatedEmployees = visibleEmployees.slice(startIndex, endIndex);
 
-              {imageError && (
-                <Typography
-                  variant="body2"
-                  color="error"
-                  sx={{
-                    mt: 1,
-                    ml: 1,
-                    fontSize: { xs: "0.75rem", sm: "0.875rem" },
-                  }}
-                >
-                  {imageError}
-                </Typography>
-              )}
+                    return paginatedEmployees.length > 0 ? (
+                      paginatedEmployees.map((emp, index) => (
+                        <TableRow
+                          key={emp.id}
+                          hover
+                          sx={{
+                            cursor: "pointer",
+                            "&:hover": {
+                              backgroundColor: "#f5f5f5",
+                            },
+                          }}
+                        >
+                          <TableCell>{startIndex + index + 1}</TableCell>
 
-              {/* Submit */}
-              <Box display="flex" justifyContent="center" mt={3}>
-                <Button
-                  variant="contained"
-                  onClick={handleCreateEmployee}
-                  sx={{
-                    px: { xs: 2, sm: 3 },
-                    py: { xs: 1, sm: 1.5 },
-                    fontSize: { xs: "0.875rem", sm: "1rem" },
-                    "&:hover": { backgroundColor: "#D9D9D9" },
-                  }}
-                >
-                  Submit
-                </Button>
-              </Box>
-
-              <Divider sx={{ my: 3 }} />
-
-              {/* Employee Table */}
-              <Box mt={4}>
-                <Box
-                  display="flex"
-                  justifyContent="space-between"
-                  alignItems="center"
-                >
-                  <Typography variant="h6" gutterBottom>
-                    All Employees
-                  </Typography>
-                  <TextField
-                    label="Search"
-                    variant="outlined"
-                    size="small"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    sx={{ width: 200 }}
-                  />
-                </Box>
-
-                <TableContainer component={Paper}>
-                  <Table size="small">
-                    <TableHead>
+                          {editingEmployeeId === emp.id ? (
+                            <>
+                              <TableCell>
+                                <TextField
+                                  variant="standard"
+                                  value={editedData.first_name}
+                                  onChange={(e) =>
+                                    setEditedData({
+                                      ...editedData,
+                                      first_name: e.target.value,
+                                    })
+                                  }
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <TextField
+                                  variant="standard"
+                                  value={editedData.last_name}
+                                  onChange={(e) =>
+                                    setEditedData({
+                                      ...editedData,
+                                      last_name: e.target.value,
+                                    })
+                                  }
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <FormControl variant="standard" fullWidth>
+                                  <Select
+                                    value={editedData.position_id}
+                                    onChange={(e) =>
+                                      setEditedData({
+                                        ...editedData,
+                                        position_id: e.target.value,
+                                      })
+                                    }
+                                  >
+                                    {positions.map((pos) => (
+                                      <MenuItem key={pos.id} value={pos.id}>
+                                        {pos.name}
+                                      </MenuItem>
+                                    ))}
+                                  </Select>
+                                </FormControl>
+                              </TableCell>
+                              <TableCell align="center">
+                                <Tooltip title="Save" arrow>
+                                  <IconButton
+                                    onClick={handleSave}
+                                    size="small"
+                                    sx={{ color: "green" }}
+                                  >
+                                    <SaveIcon fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
+                              </TableCell>
+                            </>
+                          ) : (
+                            <>
+                              <TableCell>{emp.first_name}</TableCell>
+                              <TableCell>{emp.last_name}</TableCell>
+                              <TableCell>{emp.position_name}</TableCell>
+                              <TableCell align="center">
+                                <Tooltip title="Edit" arrow>
+                                  <IconButton
+                                    onClick={() =>
+                                      handleEditEmployeeAll(emp)
+                                    }
+                                    size="small"
+                                    sx={{ color: "#1976d2" }}
+                                  >
+                                    <EditIcon fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Delete" arrow>
+                                  <IconButton
+                                    onClick={() => handleDelete(emp.id)}
+                                    size="small"
+                                    sx={{ color: "#d32f2f" }}
+                                  >
+                                    <DeleteIcon fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
+                              </TableCell>
+                            </>
+                          )}
+                        </TableRow>
+                      ))
+                    ) : (
                       <TableRow>
-                        <TableCell>No.</TableCell>
-                        <TableCell>First Name</TableCell>
-                        <TableCell>Last Name</TableCell>
-                        <TableCell>Position</TableCell>
-                        <TableCell align="center">Actions</TableCell>
+                        <TableCell colSpan={5} align="center">
+                          <Typography variant="body2" color="textSecondary">
+                            No data available
+                          </Typography>
+                        </TableCell>
                       </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {(() => {
-                        const visibleEmployees =
-                          filteredEmployees?.filter(
-                            (emp) =>
-                              ![
-                                "Sr LEO",
-                                "LEO I",
-                                "LEO II",
-                                "LEO III",
-                              ].includes(emp.position_name)
-                          ) || [];
+                    );
+                  })()}
+                </TableBody>
+              </Table>
+            </TableContainer>
 
-                        return visibleEmployees.length > 0 ? (
-                          visibleEmployees.map((emp, index) => (
-                            <TableRow
-                              key={emp.id}
-                              hover
-                              sx={{
-                                cursor: "pointer",
-                                "&:hover": {
-                                  backgroundColor: "#f5f5f5",
-                                },
-                              }}
-                            >
-                              <TableCell>{index + 1}</TableCell>
-
-                              {editingEmployeeId === emp.id ? (
-                                <>
-                                  <TableCell>
-                                    <TextField
-                                      variant="standard"
-                                      value={editedData.first_name}
-                                      onChange={(e) =>
-                                        setEditedData({
-                                          ...editedData,
-                                          first_name: e.target.value,
-                                        })
-                                      }
-                                    />
-                                  </TableCell>
-                                  <TableCell>
-                                    <TextField
-                                      variant="standard"
-                                      value={editedData.last_name}
-                                      onChange={(e) =>
-                                        setEditedData({
-                                          ...editedData,
-                                          last_name: e.target.value,
-                                        })
-                                      }
-                                    />
-                                  </TableCell>
-                                  <TableCell>
-                                    <FormControl variant="standard" fullWidth>
-                                      <Select
-                                        value={editedData.position_id}
-                                        onChange={(e) =>
-                                          setEditedData({
-                                            ...editedData,
-                                            position_id: e.target.value,
-                                          })
-                                        }
-                                      >
-                                        {positions.map((pos) => (
-                                          <MenuItem key={pos.id} value={pos.id}>
-                                            {pos.name}
-                                          </MenuItem>
-                                        ))}
-                                      </Select>
-                                    </FormControl>
-                                  </TableCell>
-                                  <TableCell align="center">
-                                    <Tooltip title="Save" arrow>
-                                      <IconButton
-                                        onClick={handleSave}
-                                        size="small"
-                                        sx={{ color: "green" }}
-                                      >
-                                        <SaveIcon fontSize="small" />
-                                      </IconButton>
-                                    </Tooltip>
-                                  </TableCell>
-                                </>
-                              ) : (
-                                <>
-                                  <TableCell>{emp.first_name}</TableCell>
-                                  <TableCell>{emp.last_name}</TableCell>
-                                  <TableCell>{emp.position_name}</TableCell>
-                                  <TableCell align="center">
-                                    <Tooltip title="Edit" arrow>
-                                      <IconButton
-                                        onClick={() =>
-                                          handleEditEmployeeAll(emp)
-                                        }
-                                        size="small"
-                                        sx={{ color: "#1976d2" }}
-                                      >
-                                        <EditIcon fontSize="small" />
-                                      </IconButton>
-                                    </Tooltip>
-                                    <Tooltip title="Delete" arrow>
-                                      <IconButton
-                                        onClick={() => handleDelete(emp.id)}
-                                        size="small"
-                                        sx={{ color: "#d32f2f" }}
-                                      >
-                                        <DeleteIcon fontSize="small" />
-                                      </IconButton>
-                                    </Tooltip>
-                                  </TableCell>
-                                </>
-                              )}
-                            </TableRow>
-                          ))
-                        ) : (
-                          <TableRow>
-                            <TableCell colSpan={5} align="center">
-                              <Typography variant="body2" color="textSecondary">
-                                No data available
-                              </Typography>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })()}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </Box>
-            </Card>
-          </DialogContent>
-        </BootstrapDialog>
+            {/* Pagination Controls */}
+            <TablePagination
+              component="div"
+              count={filteredEmployees.filter(
+                (emp) =>
+                  ![
+                    "Sr LEO",
+                    "LEO I",
+                    "LEO II",
+                    "LEO III",
+                  ].includes(emp.position_name)
+              ).length}
+              page={currentPage - 1} // Convert from 1-based to 0-based for TablePagination
+              onPageChange={handleChangePage}
+              rowsPerPage={rowsPerPage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+              rowsPerPageOptions={[10, 25, 50]}
+              labelRowsPerPage="Rows per page:"
+            />
+          </Box>
+        )}
 
         {/* adding position */}
         <BootstrapDialog
@@ -5532,8 +7800,8 @@ export function ApprovingEmployee({ refreshHistoryLogs }) {
                 label="Position Name"
                 fullWidth
                 variant="outlined"
-                value={position}
-                onChange={(e) => setPosition(e.target.value)}
+                value={positionNameInput}
+                onChange={(e) => setPositionNameInput(e.target.value)}
                 required
                 sx={{
                   mb: 2,
@@ -5630,6 +7898,9 @@ export function ApprovingEmployee({ refreshHistoryLogs }) {
           </DialogContent>
         </BootstrapDialog>
 
+        {/* Head of the Company - Only show in organizational-chart view */}
+        {viewType === "organizational-chart" && (
+        <>
         {/* Head of the Company */}
         <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
           Head of the Company
@@ -5653,15 +7924,55 @@ export function ApprovingEmployee({ refreshHistoryLogs }) {
                 <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
                   <Box
                     component="img"
-                    src={`${API_BASE_URL.replace("/api", "")}/${
+                    src={
                       chief.profile_image
-                    }`}
+                        ? (() => {
+                            // Always use production URL for images since they're hosted there
+                            const baseUrl = "https://travelsystem.dolexcdo.online";
+                            // Head of company images are in /images/profile_images/
+                            let imagePath = chief.profile_image.replace(/^\/+/, "");
+                            
+                            // Debug logging
+                            console.log("🔵 Head of Company image path:", imagePath);
+                            
+                            // If path already includes full URL, use it as is
+                            if (imagePath.startsWith("http")) {
+                              console.log("✅ Using full URL:", imagePath);
+                              return imagePath;
+                            }
+                            // If path already includes the full path, use it as is
+                            if (imagePath.startsWith("images/profile_images/")) {
+                              const fullUrl = `${baseUrl}/${imagePath}`;
+                              console.log("✅ Using path with images/profile_images/:", fullUrl);
+                              return fullUrl;
+                            }
+                            // If path starts with just "images/", add profile_images/
+                            if (imagePath.startsWith("images/")) {
+                              const fullUrl = `${baseUrl}/${imagePath}`;
+                              console.log("✅ Using path with images/:", fullUrl);
+                              return fullUrl;
+                            }
+                            // Otherwise, construct the full path (assume it's just a filename)
+                            const fullUrl = `${baseUrl}/images/profile_images/${imagePath}`;
+                            console.log("✅ Constructed full URL:", fullUrl);
+                            return fullUrl;
+                          })()
+                        : "https://picsum.photos/120"
+                    }
                     alt={chief.name}
                     sx={{
                       width: 100,
                       height: 100,
                       borderRadius: "10px",
                       objectFit: "cover",
+                    }}
+                    onError={(e) => {
+                      // If image fails to load, use fallback
+                      const fallback = "https://picsum.photos/120";
+                      if (!e.target.src.includes(fallback)) {
+                        e.target.onerror = null;
+                        e.target.src = fallback;
+                      }
                     }}
                   />
                 </Box>
@@ -5710,15 +8021,70 @@ export function ApprovingEmployee({ refreshHistoryLogs }) {
                       backgroundColor: "#f0f2f5",
                       borderRadius: "10px",
                       boxShadow: 2,
+                      height: "100%", // Make all cards the same height
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      minHeight: "280px", // Set minimum height for consistency
                     }}
                   >
                     <Box
-                      component="img"
-                      src={
+                      sx={{
+                        mb: 1,
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      <Box
+                        component="img"
+                        src={
                         person.employee_photo
-                          ? `${API_BASE_URL.replace("/api", "")}/storage/${
-                              person.employee_photo
-                            }`
+                          ? (() => {
+                              // Always use production URL for images since they're hosted there
+                              const baseUrl = "https://travelsystem.dolexcdo.online";
+                              // Employee photos are in /storage/employee_photos/
+                              let imagePath = person.employee_photo.replace(/^\/+/, "");
+                              
+                              // Debug logging (only log first few to avoid spam)
+                              if (index < 3) {
+                                console.log(`🔵 Employee ${index} photo path:`, imagePath, "for", person.first_name, person.last_name);
+                              }
+                              
+                              // If path already includes full URL, use it as is
+                              if (imagePath.startsWith("http")) {
+                                if (index < 3) console.log("✅ Using full URL:", imagePath);
+                                return imagePath;
+                              }
+                              // If path already includes storage/employee_photos/, use it as is
+                              if (imagePath.startsWith("storage/employee_photos/")) {
+                                const fullUrl = `${baseUrl}/${imagePath}`;
+                                if (index < 3) console.log("✅ Using path with storage/employee_photos/:", fullUrl);
+                                return fullUrl;
+                              }
+                              // If path starts with employee_photos/, add storage/
+                              if (imagePath.startsWith("employee_photos/")) {
+                                const fullUrl = `${baseUrl}/storage/${imagePath}`;
+                                if (index < 3) console.log("✅ Using path with employee_photos/:", fullUrl);
+                                return fullUrl;
+                              }
+                              // If path starts with storage/, check if it needs employee_photos/
+                              if (imagePath.startsWith("storage/")) {
+                                // If it doesn't already have employee_photos/, add it
+                                if (!imagePath.includes("employee_photos")) {
+                                  const fullUrl = `${baseUrl}/storage/employee_photos/${imagePath.replace("storage/", "")}`;
+                                  if (index < 3) console.log("✅ Added employee_photos/ to storage/ path:", fullUrl);
+                                  return fullUrl;
+                                }
+                                const fullUrl = `${baseUrl}/${imagePath}`;
+                                if (index < 3) console.log("✅ Using path with storage/:", fullUrl);
+                                return fullUrl;
+                              }
+                              // Otherwise, construct the full path (assume it's just a filename)
+                              const fullUrl = `${baseUrl}/storage/employee_photos/${imagePath}`;
+                              if (index < 3) console.log("✅ Constructed full URL:", fullUrl);
+                              return fullUrl;
+                            })()
                           : "https://picsum.photos/120"
                       }
                       alt={`${person.first_name} ${person.last_name}`}
@@ -5729,13 +8095,15 @@ export function ApprovingEmployee({ refreshHistoryLogs }) {
                         objectFit: "cover",
                       }}
                       onError={(e) => {
+                        // If image fails to load, use fallback
                         const fallback = "https://picsum.photos/120";
                         if (!e.target.src.includes(fallback)) {
                           e.target.onerror = null;
                           e.target.src = fallback;
                         }
                       }}
-                    />
+                      />
+                    </Box>
 
                     <IconButton
                       sx={{ position: "absolute", top: 8, right: 8 }}
@@ -5743,13 +8111,48 @@ export function ApprovingEmployee({ refreshHistoryLogs }) {
                     >
                       <MoreHoriz />
                     </IconButton>
-                    <CardContent>
-                      <Typography fontWeight="bold">
+                    <CardContent
+                      sx={{
+                        width: "100%",
+                        flex: 1,
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "center",
+                        pt: 2,
+                        pb: 1,
+                      }}
+                    >
+                      <Typography
+                        fontWeight="bold"
+                        sx={{
+                          fontSize: "0.95rem",
+                          lineHeight: 1.3,
+                          mb: 0.5,
+                          wordBreak: "break-word",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          display: "-webkit-box",
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: "vertical",
+                        }}
+                      >
                         {person.first_name}{" "}
                         {person.middle_name && person.middle_name + " "}
                         {person.last_name}
                       </Typography>
-                      <Typography variant="body2">
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          fontSize: "0.85rem",
+                          color: "text.secondary",
+                          wordBreak: "break-word",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          display: "-webkit-box",
+                          WebkitLineClamp: 1,
+                          WebkitBoxOrient: "vertical",
+                        }}
+                      >
                         {person.position_name}
                       </Typography>
                     </CardContent>
@@ -5758,8 +8161,10 @@ export function ApprovingEmployee({ refreshHistoryLogs }) {
               ))
           )}
         </Grid>
+        </>
+        )}
 
-        {/* Menu for editing/removing employees */}
+        {/* Menu for editing/removing employees - Available in both views */}
         <Menu
           anchorEl={menuAnchor}
           open={Boolean(menuAnchor)}
@@ -5818,6 +8223,164 @@ export function ApprovingEmployee({ refreshHistoryLogs }) {
             )}
           </DialogContent>
         </BootstrapDialog>
+
+        {/* Add Employee Dialog */}
+        <BootstrapDialog
+          onClose={handleClose}
+          aria-labelledby="customized-dialog-title"
+          open={openAdd}
+          sx={{ "& .MuiDialog-paper": { width: "95vw", maxWidth: 500 } }}
+        >
+          <DialogTitle
+            sx={{
+              m: 0,
+              p: { xs: 1.5, sm: 2 },
+              fontSize: { xs: "1rem", sm: "1.25rem" },
+            }}
+            id="customized-dialog-title"
+          >
+            Add Employee
+          </DialogTitle>
+          <IconButton
+            aria-label="close"
+            onClick={handleClose}
+            sx={{
+              position: "absolute",
+              right: 8,
+              top: 8,
+              color: (theme) => theme.palette.grey[500],
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+          <DialogContent
+            dividers
+            sx={{ maxHeight: "75vh", overflowY: "auto", p: { xs: 2, sm: 3 } }}
+          >
+            <Card
+              sx={{
+                p: { xs: 2, sm: 4 },
+                borderRadius: 3,
+                backgroundColor: "#ffffff",
+              }}
+            >
+              {/* Image Upload Section */}
+              <Box
+                sx={{
+                  mt: 2,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                }}
+              >
+                <Avatar
+                  src={imagePreview || "https://picsum.photos/120"}
+                  alt="Employee Photo"
+                  sx={{ width: 120, height: 120, mb: 2 }}
+                />
+                <input
+                  accept="image/*"
+                  style={{ display: "none" }}
+                  id="add-employee-image-upload"
+                  type="file"
+                  onChange={handleImageUpload}
+                />
+                <label htmlFor="add-employee-image-upload">
+                  <Button variant="contained" component="span">
+                    Upload Photo
+                  </Button>
+                </label>
+                {imageError && (
+                  <Typography color="error" variant="body2" sx={{ mt: 1 }}>
+                    {imageError}
+                  </Typography>
+                )}
+              </Box>
+
+              {/* First Name */}
+              <TextField
+                label="First Name"
+                fullWidth
+                variant="outlined"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                required
+                sx={{ mt: 2, mb: 2 }}
+              />
+
+              {/* Middle Initial */}
+              <TextField
+                label="Middle Initial"
+                fullWidth
+                variant="outlined"
+                value={middleInitial}
+                onChange={(e) => setMiddleInitial(e.target.value)}
+                sx={{ mb: 2 }}
+              />
+
+              {/* Last Name */}
+              <TextField
+                label="Last Name"
+                fullWidth
+                variant="outlined"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                required
+                sx={{ mb: 2 }}
+              />
+
+              {/* Suffix */}
+              <TextField
+                label="Suffix"
+                fullWidth
+                variant="outlined"
+                value={suffix}
+                onChange={(e) => setSuffix(e.target.value)}
+                placeholder="Jr., Sr., II, III, etc."
+                sx={{ mb: 2 }}
+              />
+
+              {/* Position Dropdown */}
+              <FormControl fullWidth variant="outlined" sx={{ mb: 2 }}>
+                <InputLabel id="add-position-select-label">Position *</InputLabel>
+                <Select
+                  labelId="add-position-select-label"
+                  id="add-position-select"
+                  value={position}
+                  onChange={(e) => {
+                    setPosition(e.target.value);
+                    const selectedPos = positions.find((pos) => pos.id === e.target.value);
+                    setPositionName(selectedPos?.name || "");
+                    setImageError(""); // Clear error when position changes
+                  }}
+                  label="Position *"
+                >
+                  {positions.map((pos) => (
+                    <MenuItem key={pos.id} value={pos.id}>
+                      {pos.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              {/* Save Button */}
+              <Box display="flex" justifyContent="center" mt={2}>
+                <Button
+                  variant="contained"
+                  onClick={handleCreateEmployee}
+                  sx={{
+                    px: { xs: 2, sm: 3 },
+                    py: { xs: 1, sm: 1.5 },
+                    fontSize: { xs: "0.875rem", sm: "1rem" },
+                    "&:hover": { backgroundColor: "#D9D9D9" },
+                  }}
+                >
+                  Save Employee
+                </Button>
+              </Box>
+            </Card>
+          </DialogContent>
+        </BootstrapDialog>
       </Card>
     </Box>
   );
@@ -5837,7 +8400,7 @@ export function EditEmployee({
     hostname.startsWith("192.168.") ||
     hostname.startsWith("10.")
       ? `http://${hostname}:8000/api` // Development or LAN
-      : `${window.location.origin}/api`; // Production (same origin)
+      : `https://api.dolexcdo.online/api`; // Production
 
   // Initialize with employeeData photo if available
   const initialEmployeePhoto = employeeData?.employee_photo || null;
@@ -5855,13 +8418,40 @@ export function EditEmployee({
   // Debugging: Log current employee and previewImage when they change
 
   useEffect(() => {
+    const hostname = window.location.hostname;
+    const baseUrl =
+      hostname === "localhost" ||
+      hostname.startsWith("192.168.") ||
+      hostname.startsWith("10.")
+        ? `http://${hostname}:8000`
+        : "https://travelsystem.dolexcdo.online";
+    
     const currentAvatarSrc =
       previewImage ||
       (employee.employee_photo
-        ? `${API_BASE_URL.replace(
-            /\/api\/?$/,
-            ""
-          )}/storage/${employee.employee_photo.replace(/^\/+/, "")}`
+        ? (() => {
+            // Employee photos are in /storage/employee_photos/
+            let imagePath = employee.employee_photo.replace(/^\/+/, "");
+            
+            // If path already includes full URL, use it as is
+            if (imagePath.startsWith("http")) {
+              return imagePath;
+            }
+            // If path already includes storage/employee_photos/, use it as is
+            if (imagePath.startsWith("storage/employee_photos/")) {
+              return `${baseUrl}/${imagePath}`;
+            }
+            // If path starts with employee_photos/, add storage/
+            if (imagePath.startsWith("employee_photos/")) {
+              return `${baseUrl}/storage/${imagePath}`;
+            }
+            // If path starts with storage/, add employee_photos/
+            if (imagePath.startsWith("storage/")) {
+              return `${baseUrl}/${imagePath}`;
+            }
+            // Otherwise, construct the full path (assume it's just a filename)
+            return `${baseUrl}/storage/employee_photos/${imagePath}`;
+          })()
         : "https://picsum.photos/120");
   }, [employee.employee_photo, previewImage]);
 
@@ -6124,6 +8714,8 @@ export function StatisticsEmployee({
   passSlipData: employeeCountsPassSlip,
 }) {
   const [view, setView] = useState(null); // Initial state is null (no filter)
+  const [selectedMonth, setSelectedMonth] = useState(dayjs().format("YYYY-MM")); // Default to current month
+  const [selectedWeek, setSelectedWeek] = useState(1); // Default to Week 1
   const [filteredData, setFilteredData] = useState({
     officialBusiness: [],
     travelOrder: [],
@@ -6132,8 +8724,49 @@ export function StatisticsEmployee({
 
   const isMobile = useMediaQuery("(max-width:600px)");
 
-  // Filter the data based on the selected view (weekly or monthly)
-  const filterDataByDate = (data, view) => {
+  // Generate list of months for the selector (last 12 months + current month)
+  const generateMonthOptions = () => {
+    const months = [];
+    const current = dayjs();
+    for (let i = 11; i >= 0; i--) {
+      const month = current.subtract(i, "month");
+      months.push({
+        value: month.format("YYYY-MM"),
+        label: month.format("MMMM YYYY"),
+      });
+    }
+    return months;
+  };
+
+  // Generate list of weeks for the selected month (Week 1-4)
+  const generateWeekOptions = () => {
+    const monthDayjs = dayjs(selectedMonth);
+    const weeks = [];
+    const firstDayOfMonth = monthDayjs.startOf("month");
+    const lastDayOfMonth = monthDayjs.endOf("month");
+    const firstWeekStart = firstDayOfMonth.startOf("week");
+    
+    // Generate 4 week options
+    for (let week = 1; week <= 4; week++) {
+      const weekStart = firstWeekStart.add((week - 1) * 7, "day");
+      const weekEnd = weekStart.endOf("week");
+      
+      // Only include weeks that overlap with the selected month
+      if (weekEnd.isSameOrAfter(firstDayOfMonth) && weekStart.isSameOrBefore(lastDayOfMonth)) {
+        weeks.push({
+          value: week,
+          label: `Week ${week}`,
+          startDate: weekStart.format("MMM D"),
+          endDate: weekEnd.format("MMM D, YYYY"),
+        });
+      }
+    }
+    
+    return weeks;
+  };
+
+  // Filter the data based on the selected view (weekly or monthly), month, and week
+  const filterDataByDate = (data, view, monthValue, weekValue) => {
     // If no view is selected, return all data (no filtering)
     if (!view) {
       return Object.entries(data).map(([label, info]) => ({
@@ -6143,10 +8776,23 @@ export function StatisticsEmployee({
       }));
     }
 
-    const today = dayjs();
-    const start =
-      view === "week" ? today.startOf("week") : today.startOf("month");
-    const end = view === "week" ? today.endOf("week") : today.endOf("month");
+    const selectedMonthDayjs = dayjs(monthValue || selectedMonth);
+    const selectedWeekNum = weekValue !== undefined ? weekValue : selectedWeek;
+    let start, end;
+
+    if (view === "week") {
+      // For weekly, calculate the specific week based on selected month and week number
+      const firstDayOfMonth = selectedMonthDayjs.startOf("month");
+      const firstWeekStart = firstDayOfMonth.startOf("week");
+      
+      // Calculate the start and end of the selected week (Week 1-4)
+      start = firstWeekStart.add((selectedWeekNum - 1) * 7, "day");
+      end = start.endOf("week");
+    } else {
+      // For monthly, use the selected month
+      start = selectedMonthDayjs.startOf("month");
+      end = selectedMonthDayjs.endOf("month");
+    }
 
     return Object.entries(data)
       .map(([label, info]) => {
@@ -6173,11 +8819,11 @@ export function StatisticsEmployee({
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" ");
 
-  // Whenever the view changes or the data changes, filter the data
+  // Whenever the view, selectedMonth, selectedWeek, or data changes, filter the data
   useEffect(() => {
-    const filteredOB = filterDataByDate(employeeCountsOfficialBusiness, view);
-    const filteredTO = filterDataByDate(employeeCountsTravelOrder, view);
-    const filteredPS = filterDataByDate(employeeCountsPassSlip, view);
+    const filteredOB = filterDataByDate(employeeCountsOfficialBusiness, view, selectedMonth, selectedWeek);
+    const filteredTO = filterDataByDate(employeeCountsTravelOrder, view, selectedMonth, selectedWeek);
+    const filteredPS = filterDataByDate(employeeCountsPassSlip, view, selectedMonth, selectedWeek);
 
     setFilteredData({
       officialBusiness: filteredOB,
@@ -6186,6 +8832,8 @@ export function StatisticsEmployee({
     });
   }, [
     view,
+    selectedMonth,
+    selectedWeek,
     employeeCountsOfficialBusiness,
     employeeCountsTravelOrder,
     employeeCountsPassSlip,
@@ -6229,20 +8877,26 @@ export function StatisticsEmployee({
 
   return (
     <Box sx={{ padding: { xs: 2, sm: 4 } }}>
-      <Typography
-        variant={isMobile ? "h6" : "h4"}
-        fontWeight="bold"
-        textAlign="center"
-        mb={2}
+      <Box 
+        display="flex" 
+        flexDirection={{ xs: "column", sm: "row" }}
+        justifyContent="center" 
+        alignItems="center"
+        gap={2}
+        mb={3}
+        flexWrap="wrap"
       >
-        Travel Management System
-      </Typography>
-
-      <Box display="flex" justifyContent="center" mb={3}>
         <ToggleButtonGroup
           value={view}
           exclusive
-          onChange={(e, newView) => setView(newView)}
+          onChange={(e, newView) => {
+            setView(newView);
+            // Reset to current month and week 1 when changing view
+            if (newView) {
+              setSelectedMonth(dayjs().format("YYYY-MM"));
+              setSelectedWeek(1);
+            }
+          }}
           aria-label="View toggle"
         >
           <ToggleButton value="week" color="primary">
@@ -6252,6 +8906,62 @@ export function StatisticsEmployee({
             Monthly
           </ToggleButton>
         </ToggleButtonGroup>
+        
+        {view && (
+          <>
+            <FormControl 
+              size="small" 
+              sx={{ 
+                minWidth: { xs: "100%", sm: "200px" },
+                maxWidth: { xs: "100%", sm: "250px" }
+              }}
+            >
+              <InputLabel id="month-select-label">Select Month</InputLabel>
+              <Select
+                labelId="month-select-label"
+                id="month-select"
+                value={selectedMonth}
+                label="Select Month"
+                onChange={(e) => {
+                  setSelectedMonth(e.target.value);
+                  // Reset to week 1 when month changes
+                  setSelectedWeek(1);
+                }}
+              >
+                {generateMonthOptions().map((month) => (
+                  <MenuItem key={month.value} value={month.value}>
+                    {month.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            
+            {view === "week" && (
+              <FormControl 
+                size="small" 
+                sx={{ 
+                  minWidth: { xs: "100%", sm: "180px" },
+                  maxWidth: { xs: "100%", sm: "200px" }
+                }}
+              >
+                <InputLabel id="week-select-label">Select Week</InputLabel>
+                <Select
+                  labelId="week-select-label"
+                  id="week-select"
+                  value={selectedWeek}
+                  label="Select Week"
+                  onChange={(e) => setSelectedWeek(e.target.value)}
+                >
+                  {generateWeekOptions().map((week) => (
+                    <MenuItem key={week.value} value={week.value}>
+                      {week.label} ({week.startDate} - {week.endDate})
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            )}
+          </>
+        )}
       </Box>
 
       {sections.map((section, index) => {
@@ -7271,7 +9981,7 @@ export function ManageHead({ setLoading, refreshHistoryLogs, refetch }) {
     hostname.startsWith("192.168.") ||
     hostname.startsWith("10.")
       ? `http://${hostname}:8000/api` // Development or LAN
-      : `${window.location.origin}/api`; // Production (same origin)
+      : `https://api.dolexcdo.online/api`; // Production
 
   const [previewImage, setPreviewImage] = useState(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
@@ -8790,7 +11500,7 @@ export const TOSIGN = ({ data, onClose }) => {
     hostname.startsWith("192.168.") ||
     hostname.startsWith("10.")
       ? `http://${hostname}:8000/api` // Development or LAN
-      : `${window.location.origin}/api`; // Production (same origin)
+      : `https://api.dolexcdo.online/api`; // Production
 
   // Helper to load image as Base64
   const loadImageAsBase64 = (url) => {

@@ -3,14 +3,16 @@ import axios from "axios";
 import { toast } from "react-toastify";
 
 // ✅ Dynamically set Laravel API base URL — works in localhost, LAN, and production
+// Priority: Environment variable > Auto-detect > Default production URL
 const hostname = window.location.hostname;
 
 const API_BASE_URL =
-  hostname === "localhost" ||
+  process.env.REACT_APP_API_URL || // Use environment variable if set (for Vercel, etc.)
+  (hostname === "localhost" ||
   hostname.startsWith("192.168.") ||
   hostname.startsWith("10.")
     ? `http://${hostname}:8000/api` // Development or LAN
-    : `${window.location.origin}/api`; // Production (same origin)
+    : `https://api.dolexcdo.online/api`); // Production (fallback)
 
 // ✅ Configure Axios instance with the computed API base URL
 const api = axios.create({

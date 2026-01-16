@@ -3,14 +3,16 @@ import axios from "axios";
 import Cookies from "js-cookie";
 
 // Dynamically set Laravel API base URL — works in localhost, LAN, and production
+// Priority: Environment variable > Auto-detect > Default production URL
 const hostname = window.location.hostname;
 
 const API_BASE_URL =
-  hostname === "localhost" ||
+  process.env.REACT_APP_API_URL || // Use environment variable if set (for Vercel, etc.)
+  (hostname === "localhost" ||
   hostname.startsWith("192.168.") ||
   hostname.startsWith("10.")
     ? `http://${hostname}:8000/api` // Development or LAN
-    : `${window.location.origin}/api`; // Production (same origin)
+    : `https://api.dolexcdo.online/api`); // Production (fallback)
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
@@ -128,7 +130,7 @@ export const SoftDeletePosition = async (id) => {
 };
 
 /////////////////////////////////////////////////////////////EMPLOYEE-API/////
-// Fetch all employees
+// Fetch all employees (requires authentication)
 export const fetchEmployees = async () => {
   try {
     const token = getToken(); // Assuming you have a function to get the token
@@ -142,6 +144,29 @@ export const fetchEmployees = async () => {
     return response.data;
   } catch (error) {
     console.error("Error fetching employees:", error);
+    throw error;
+  }
+};
+
+// Fetch employees for public organizational structure (no authentication required)
+export const fetchEmployeesPublic = async () => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/employees/public`, {
+      // No Authorization header for public endpoint
+    });
+    return response.data;
+  } catch (error) {
+    // If public endpoint doesn't exist, try the regular endpoint without auth
+    if (error.response?.status === 404 || error.response?.status === 401) {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/employees`);
+        return response.data;
+      } catch (fallbackError) {
+        console.error("Error fetching employees (public):", fallbackError);
+        throw fallbackError;
+      }
+    }
+    console.error("Error fetching employees (public):", error);
     throw error;
   }
 };
